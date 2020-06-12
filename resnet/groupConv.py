@@ -3,6 +3,7 @@ from keras.utils import conv_utils
 from keras.engine import InputSpec
 import keras.backend as K
 import tensorflow as tf
+from keras.models import Model
 
 
 class GroupConv2D(Conv2D):
@@ -82,7 +83,7 @@ class GroupConv2D(Conv2D):
                                       constraint=self.kernel_constraint)
 
         if self.use_bias:
-            self.bias = self.add_weight(shape=(self.group * group_filters),
+            self.bias = self.add_weight(shape=(self.group * group_filters,),
                                         initializer=self.bias_initializer,
                                         name='bias',
                                         regularizer=self.bias_regularizer,
@@ -90,6 +91,7 @@ class GroupConv2D(Conv2D):
 
         else:
             self.bias = None
+
 
         # Set input spec.
         self.input_spec = InputSpec(ndim=4, axes={self.channel_axis: input_dim})
@@ -116,17 +118,22 @@ class GroupConv2D(Conv2D):
 
     def compute_output_shape(self, input_shape):
         if self.data_format == 'channels_first':
-            return input_shape[0], self.filters, input_shape[2], input_shape[3]
+            output_h = int(input_shape[2] / self.strides[0])
+            output_w = int(input_shape[3] / self.strides[1])
+            return input_shape[0], self.filters, output_h, output_w
 
         elif self.data_format == 'channels_last':
-            return input_shape[0], input_shape[1], input_shape[2], self.filters
+            output_h = int(input_shape[1] / self.strides[0])
+            output_w = int(input_shape[2] / self.strides[1])
+            return input_shape[0], output_h, output_w, self.filters
 
 
 if __name__ == '__main__':
 
-    x = Input((128,128,128))
-    x = GroupConv2D(x.shape[-1], 3, strides=1, padding='same', group=4)(x)
-    print(x)
+    x = Input((224,224,3))
+    y = GroupConv2D(64, 7, strides=2, padding='same', group=1)(x)
+    model = Model(x,y)
+    model.summary()
 
 
 

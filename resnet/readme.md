@@ -7,11 +7,37 @@
     reference: https://github.com/fangwudi/Group-Depthwise-Conv3D-for-Keras
     参数量一样，但是构建图的时候比写循环快得多
     不知道对不对，需要实验对比一下
+    tensorflow1.15, keras2.2.4
+    //tensorflow2.0, keras2.3.1
 
 
-## resnest
+## resnext
+    cardinality: C               |   1  |   2  |   4  |   8  |   32  |
+    width of bottleneck: kd      |  64  |  40  |  24  |  14  |    4  |
+    width of group conv: filters |  64  |  80  |  96  | 112  |  128  |
+
+
+## resneSt
     官方torch源码: https://github.com/zhanghang1989/ResNeSt
     第三方tf源码: https://github.com/QiaoranC/tf_ResNeSt_RegNet_model
+
+    官方初始化：所有的卷积层权重normal init，所有的BN层权重one init，bias zero init
+
+    官方下采样：avg pooling，resnet是stride2conv
+
+    r=1, C=1: resnet
+    r=1, C!=1: resnext
+    r!=1: resneSt, r!=1才有split-attention模块，不然就是正常的3x3conv
+
+    官方downsamp: 我看源代码将下采样放在第一层1x1卷积之后，本工程保持和resnet一致
+
+
+## params
+    depth50:
+    r50   |   23,587,712
+    rx50  |   23,082,240
+    rS50  |   15,894,192
+
 
 
 ## Stochastic Depth
