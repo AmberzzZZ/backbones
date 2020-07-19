@@ -86,9 +86,11 @@ class GroupNormalization(Layer):
         self.input_spec = InputSpec(ndim=len(input_shape),
                                     axes={self.axis: dim})
 
-        if self.axis==-1:
-            shape_ = (1,1,1,dim)
+        if len(input_shape)==5:
+            # 3-dims
+            shape_ = (1,dim,1,1,1)
         else:
+            # 2-dims
             shape_ = (1,dim,1,1)
 
         if self.scale:
@@ -116,24 +118,40 @@ class GroupNormalization(Layer):
 
         G = self.groups
 
-        # transpose:[ba,h,w,c] -> [bs,c,h,w]
-        if self.axis in {-1,3}:
-            inputs = K.permute_dimensions(inputs,(0,3,1,2))
+        # transpose:[b,***,c] -> [b,c,***]
+        if K.shape(inputs).shape[0] == 5:
+            # 3-dim
+            if self.axis in {-1,4}:
+                inputs = K.permute_dimensions(inputs,(0,4,1,2,3))
+            N, C, D, H, W = K.int_shape(inputs)
+            inputs = K.reshape(inputs,(-1, G, C//G, D, H, W))
+            # compute group-channel mean & variance
+            gn_mean = K.mean(inputs,axis=[2,3,4,5],keepdims=True)
+            gn_variance = K.var(inputs,axis=[2,3,4,5],keepdims=True)
 
-        input_shape = K.int_shape(inputs)
-        N, C, H, W = input_shape
-        inputs = K.reshape(inputs,(-1, G, C // G, H, W))
-        # inputs.assign_sub()
+            outputs = (inputs - gn_mean) / (K.sqrt(gn_variance + self.epsilon))
+            outputs = K.reshape(outputs,[-1, C, D, H, W]) * self.gamma + self.beta
 
-        # compute group-channel mean & variance
-        gn_mean = K.mean(inputs,axis=[2,3,4],keepdims=True)
-        gn_variance = K.var(inputs,axis=[2,3,4],keepdims=True)
-        outputs = (inputs - gn_mean) / (K.sqrt(gn_variance + self.epsilon))
-        outputs = K.reshape(outputs,[-1, C, H, W]) * self.gamma + self.beta
+            # transpose back:
+            if self.axis in {-1,4}:
+                outputs = K.permute_dimensions(outputs,(0,2,3,4,1))
 
-        # transpose: [bs,c,h,w] -> [ba,h,w,c]
-        if self.axis in {-1,3}:
-            outputs = K.permute_dimensions(outputs,(0,2,3,1))
+        else:
+            # 2-dim
+            if self.axis in {-1,3}:
+                inputs = K.permute_dimensions(inputs,(0,3,1,2))
+            N, C, H, W = K.int_shape(inputs)
+            inputs = K.reshape(inputs,(-1, G, C//G, H, W))
+            # compute group-channel mean & variance
+            gn_mean = K.mean(inputs,axis=[2,3,4],keepdims=True)
+            gn_variance = K.var(inputs,axis=[2,3,4],keepdims=True)
+
+            outputs = (inputs - gn_mean) / (K.sqrt(gn_variance + self.epsilon))
+            outputs = K.reshape(outputs,[-1, C, H, W]) * self.gamma + self.beta
+
+            # transpose back:
+            if self.axis in {-1,3}:
+                outputs = K.permute_dimensions(outputs,(0,2,3,1))
 
         return outputs
 
@@ -160,6 +178,17 @@ class GroupNormalization(Layer):
 
 
 get_custom_objects().update({'GroupNormalization': GroupNormalization})
+
+
+if __name__ == '__main__':
+
+    from keras.layers import Input
+    x = Input((96,128,128,32))
+    x = Input((128,128,32))
+    y = GroupNormalization(axis=-1, groups=16)(x)
+    print(y)
+
+
 
 
 
