@@ -3,6 +3,7 @@ from keras.layers import Input, Conv2D, BatchNormalization, Activation, Depthwis
 from keras.models import Model
 import keras.backend as K
 import math
+import copy
 
 
 DEFAULT_BLOCKS_ARGS = [
@@ -50,6 +51,8 @@ def EfficientNet(input_shape, width_coefficient, depth_coefficient, dropout_rate
                  n_classes=1000, drop_connect_rate=0.2, blocks_args=DEFAULT_BLOCKS_ARGS,
                  depth_divisor=8):
 
+    blocks_args = copy.deepcopy(blocks_args)
+
     if isinstance(input_shape, tuple):
         inpt = Input(input_shape)
     else:
@@ -60,9 +63,9 @@ def EfficientNet(input_shape, width_coefficient, depth_coefficient, dropout_rate
 
     # blocks
     b = 0
-    blocks = float(sum(args['repeats'] for args in DEFAULT_BLOCKS_ARGS))
+    blocks = float(sum(args['repeats'] for args in blocks_args))
     # for each block group
-    for block_arg in DEFAULT_BLOCKS_ARGS:
+    for block_arg in blocks_args:
         # for each mbconv block
         block_arg['repeats'] = round_repeats(block_arg['repeats'], depth_coefficient)
         block_arg['filters_in'] = round_filters(block_arg['filters_in'], width_coefficient)
@@ -203,8 +206,13 @@ def EfficientNetB7():
 if __name__ == '__main__':
 
     model = EfficientNetB4()
-    model.load_weights("/Users/amber/Downloads/Misc/efficientnet-b4_weights_tf_dim_ordering_tf_kernels.h5", by_name=True, skip_mismatch=True)
-    # model.summary()
+    # model.load_weights("/Users/amber/Downloads/Misc/efficientnet-b4_weights_tf_dim_ordering_tf_kernels.h5")
+
+    # newmodel = Model(model.input, model.get_layer(index=-4).output)
+    # newmodel.summary()
+    # newmodel.save_weights('eff_b4_notop.h5')
+    # print(newmodel.input, newmodel.get_layer(index=1).output)
+
 
 
 

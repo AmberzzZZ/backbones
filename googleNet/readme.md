@@ -62,6 +62,15 @@
         swish最早出现在MobileNetV3，effNet用的block就是MobileNetV3的block，
         但是MobileNetV3不是只在深层block里面用了swish，因为论文里说实验下来这样好
 
+    8. load_weights
+        如果是加载ImageNet的预权重的话by_name=False，因为网络层的名字不一样
+
+
+    9. convert weights
+        h5解析: h5py._hl.dataset.Dataset数据结构和numpy数据结构
+
+
+
 
 
 
