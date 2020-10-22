@@ -47,4 +47,12 @@
     循环的abc block
 
 
+## convert
+    官方的h5文件，notop版本，3通道，有GlobalAveragePooling，conv层有bias
+    dataset & group
+    dataset结构和numpy差不多，用[:]可以转成array
+    group结构类似dict，如果是biased conv，有kernel和bias两个权重参数，就需要通过key来读取
+
+
+
     
