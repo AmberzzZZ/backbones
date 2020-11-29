@@ -92,7 +92,6 @@ class GroupConv2D(Conv2D):
         else:
             self.bias = None
 
-
         # Set input spec.
         self.input_spec = InputSpec(ndim=4, axes={self.channel_axis: input_dim})
         self.built = True

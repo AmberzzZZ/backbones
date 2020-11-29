@@ -38,6 +38,7 @@
     rx50    |   23,082,240
     rS50    |   15,894,192
     p3dr50  |   27,482,240
+    csprx50 |   10,359,072
 
 
 ## Stochastic Depth
@@ -53,6 +54,11 @@
     dataset结构和numpy差不多，用[:]可以转成array
     group结构类似dict，如果是biased conv，有kernel和bias两个权重参数，就需要通过key来读取
 
+
+## cspresnet
+    由于输入的通道减半，【计算量】减半，【参数量】减半，csp version可以不使用bottleneck结构
+    leakyReLU
+    origin skip: 1x1 conv s1/2, BN
 
 
     
