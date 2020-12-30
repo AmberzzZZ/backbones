@@ -8,7 +8,7 @@ if __name__ == '__main__':
     # step1: save h5 file by my model name
     model = EfficientNetB4()
     model.load_weights("weights/efficientnet-b4_weights_tf_dim_ordering_tf_kernels.h5")
-    mode.save_weights("weights/eff_b4_notop.h5")
+    model.save_weights("weights/eff_b4_notop.h5")
 
     # step2: read conv1 weights, duplicate across channel
     f = h5py.File('weights/eff_b4_notop.h5', 'r')

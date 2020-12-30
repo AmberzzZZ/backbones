@@ -45,12 +45,12 @@ def csp_densenet(input_tensor=None, input_shape=(224,224,3), n_classes=1000,
             else:
                 x = dense_block(x, K)      # [N,h,w,nK]
         # transition
-        if transition_dense and i != len(num_blocks)-1:    # last block but not last layer
+        if transition_dense:
             # transition block
             x = csp_transition_block(x, theta)
         # fusion
         x = concatenate([skip, x], axis=-1)
-        if transition_fuse and i != len(num_blocks)-1:
+        if transition_fuse and i != len(num_blocks)-1:         # last block but not last layer
             x = transition_block(x, theta)
 
     # for last dense block
