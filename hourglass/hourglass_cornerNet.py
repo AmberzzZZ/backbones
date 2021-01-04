@@ -28,12 +28,13 @@ def hourglass(input_shape=(512,512,3), n_classes=80, n_stacks=2, n_channles=[256
 def hourglass_module(inpt, n_classes, n_channles):
     x = inpt
     features = [x]     # from x4 to x64
+    n_levels = len(n_channles)
     # encoder: s1 residual + s2 residual
-    for i in range(5):
+    for i in range(n_levels):
         if i!=0:
             x = residual(x, n_channles[i], strides=1)
             features.append(x)
-        if i!=4:
+        if i!=n_levels-1:
             x = residual(x, n_channles[i+1], strides=2)
 
     # mid connection: 4 residuals
@@ -41,7 +42,7 @@ def hourglass_module(inpt, n_classes, n_channles):
         x = residual(x, n_channles[-1], strides=1)
 
     # decoder:
-    for i in range(3, -1, -1):
+    for i in range(n_levels-2, -1, -1):
         # skip: 2 residuals
         skip = features[i]
         skip = residual(skip, n_channles[i], strides=1)
@@ -65,9 +66,9 @@ def hourglass_module(inpt, n_classes, n_channles):
 
 if __name__ == '__main__':
 
-    model = hourglass()
+    model = hourglass(n_stacks=1, n_channles=[256, 384])
     # model.summary()
-    model.save("hourglass_corner.h5")
+    # model.save("hourglass_corner.h5")
 
 
 

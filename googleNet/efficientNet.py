@@ -125,10 +125,10 @@ def se_block(x, dense_dim):
     x = GlobalAveragePooling2D()(x)
     x = Reshape((1,1,in_channels))(x)
     # reduce
-    x = Conv2D(dense_dim, 1, strides=1, padding='same',
+    x = Conv2D(dense_dim, 1, strides=1, padding='same', use_bias=False,
                activation=swish, kernel_initializer=CONV_KERNEL_INITIALIZER)(x)
     # excite
-    x = Conv2D(in_channels, 1, strides=1, padding='same',
+    x = Conv2D(in_channels, 1, strides=1, padding='same', use_bias=False,
                activation='sigmoid', kernel_initializer=CONV_KERNEL_INITIALIZER)(x)
     # reweight
     x = Multiply()([inpt, x])

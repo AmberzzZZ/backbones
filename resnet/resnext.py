@@ -1,5 +1,6 @@
 # resnext, 50 & 101, use self defined groupConv Layer
-from keras.layers import Input, MaxPooling2D, ReLU, add, BatchNormalization
+from keras.layers import Input, MaxPooling2D, ReLU, add, BatchNormalization, GlobalAveragePooling2D, \
+                         Dense, Reshape, multiply
 from keras.models import Model
 from groupConv import GroupConv2D
 
@@ -28,17 +29,30 @@ def resnext(input_shape=(224,224,3), depth=50, C=32):
     return model
 
 
-def resnext_block(x, g_filters, n_filters, strides, C=32):
+def resnext_block(x, g_filters, n_filters, strides, C=32, se_ratio=16):
     inpt = x
     # 1x1conv-3x3group conv-1x1conv
     x = Conv_BN(inpt, g_filters, 1, strides=strides, activation='relu')
     x = Conv_BN(x, g_filters, 3, strides=1, group=C, activation='relu')
     x = Conv_BN(x, n_filters, 1, strides=1, activation=None)
+    if se_ratio:
+        x = SE_block(x, se_ratio)
     # shortcut
     if strides!=1 or inpt._keras_shape[-1]!=n_filters:
         inpt = Conv_BN(inpt, n_filters, 1, strides=strides, activation=None)
     x = add([inpt, x])
     x = ReLU()(x)
+    return x
+
+
+def SE_block(inpt, ratio=16):     # spatial squeeze and channel excitation
+    x = inpt
+    n_filters = x._keras_shape[-1]
+    x = GlobalAveragePooling2D()(x)
+    x = Reshape((1,1,n_filters))(x)
+    x = Dense(n_filters//ratio, activation='relu', use_bias=False)(x)
+    x = Dense(n_filters, activation='sigmoid', use_bias=False)(x)
+    x = multiply([inpt, x])
     return x
 
 
