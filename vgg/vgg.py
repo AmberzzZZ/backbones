@@ -21,6 +21,8 @@ def vgg16_model(input_shape=(224,224,3), n_classes=10):
     x = conv_block(x, 512, 3)
     x = MaxPool2D(pool_size=2, strides=2, padding='same')(x)
 
+    print(x)
+
     x = Flatten()(x)
     x = Dense(4096)(x)
     x = Dense(4096)(x)
@@ -69,7 +71,7 @@ def conv_block(x, filters, n_layers, kernel_size=3, strides=1):
 
 if __name__ == '__main__':
 
-    model = vgg19_model(input_shape=(224,224,3), n_classes=10)
-    model.summary()
+    model = vgg16_model(input_shape=(224,224,3), n_classes=10)
+    # model.summary()
 
 

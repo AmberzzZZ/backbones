@@ -44,6 +44,16 @@
 
 
 ## Stochastic Depth
+    shrink the depth during training
+    keep unchanged during testing
+
+    traing phase randomly dropping resblocks: 
+        只保留skip connection，残差通道mute掉
+        Bernoulli: binary factor of active / inactive, survival probabilities, 服从uniform distribution / linear decay
+
+    testing phase re-calibration: 
+        跟dropout思路相似，model assemble的思路
+        Hl = ReLU(prob*f(Hl-1,Wl) + Hl-1)
 
 
 ## pseudo 3d
