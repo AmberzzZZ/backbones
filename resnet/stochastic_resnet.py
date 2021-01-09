@@ -51,7 +51,8 @@ def res_block(inpt, n_filters, strides, prob, training):
         else:
             skip = inpt
         active = RandomBinomial(prob)(skip)    # [0,1] switch for training
-        x = Lambda(lambda x: tf.cond(active>0, lambda: ReLU()(add([x[0],x[1]])), lambda: x[1]))([residual,skip])
+        active = tf.Print(active, [active], message="   active  ")
+        x = Lambda(lambda x: tf.cond(x[2]>0, lambda: ReLU()(add([x[0],x[1]])), lambda: x[1]))([residual,skip,active])
         return x
 
     else:
