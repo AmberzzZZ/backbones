@@ -32,7 +32,7 @@ def resnet(input_shape=(224,224,3), depth=50, pooling=False):
     return model
 
 
-def res_block(x, n_filters, strides, se_ratio=16):
+def res_block(x, n_filters, strides, se_ratio=0):
     inpt = x
     # residual
     x = Conv_BN(x, n_filters//4, 1, strides=strides, activation='relu')

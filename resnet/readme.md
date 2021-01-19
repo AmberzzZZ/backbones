@@ -72,5 +72,10 @@
     leakyReLU
     origin skip: 1x1 conv s1/2, BN
 
+    官方的cfg跟论文中说的不太一样，每个stage的block数和通道数都有变化，padding shortcut
+
+
+
+
 
     
