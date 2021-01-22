@@ -36,6 +36,13 @@ if __name__ == '__main__':
     config_file = unique_config_sections(config_pt)
     cfg_parser = configparser.ConfigParser()
     cfg_parser.read_file(config_file)
+    major, minor, revision = np.ndarray(
+        shape=(3, ), dtype='int32', buffer=weights_file.read(12))
+    if (major*10+minor)>=2 and major<1000 and minor<1000:
+        seen = np.ndarray(shape=(1,), dtype='int64', buffer=weights_file.read(8))
+    else:
+        seen = np.ndarray(shape=(1,), dtype='int32', buffer=weights_file.read(4))
+    print('Weights Header: ', major, minor, revision, seen)
 
     # print(cfg_parser.sections())   # list of layer
     # # for key in cfg_parser['net_0']:    # net hyperparameters
@@ -202,6 +209,7 @@ if __name__ == '__main__':
     # save model
     model = Model(inputs=input_layer, outputs=prev_layer)
     model.summary()
-    model.save('csp_r50.h5')
+    # model.save('csp_r50.h5')
+    model.save_weights('csp_r50.h5')
 
 

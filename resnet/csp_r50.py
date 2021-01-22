@@ -87,11 +87,11 @@ def csp_r50(input_shape=(256,256,3), n_classes=1000):
     # outside transition
     x = Conv_BN(x, 1024, 1, strides=1, activation='leaky')
 
-    # head
-    x = GlobalAveragePooling2D()(x)
-    x = Reshape((1,1,1024))(x)
-    x = Conv2D(n_classes, 1, strides=1, padding='same', activation=None, use_bias=True)(x)
-    x = Softmax()(x)
+    # # head
+    # x = GlobalAveragePooling2D()(x)
+    # x = Reshape((1,1,1024))(x)
+    # x = Conv2D(n_classes, 1, strides=1, padding='same', activation=None, use_bias=True)(x)
+    # x = Softmax()(x)
 
     # model
     model = Model(inpt, x)
@@ -123,7 +123,8 @@ def Conv_BN(x, n_filters, kernel_size, strides, activation=None):
 if __name__ == '__main__':
 
     model = csp_r50(input_shape=(256,256,3), n_classes=1000)
-    model.load_weights('csp_r50.h5', by_name=True)
+    model.load_weights('weights/csp_r50.h5', by_name=True)
+    model.summary()
 
 
 

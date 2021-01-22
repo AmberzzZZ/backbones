@@ -75,7 +75,11 @@
     官方的cfg跟论文中说的不太一样，每个stage的block数和通道数都有变化，padding shortcut
 
 
-
+## FuseConvBN层
+    写了一个fuseconvbn，在inference阶段，bn中的mean和variance参数freeze掉了，
+    相当于连续两个线性层，bn相当于1x1的卷积
+    训练好以后可以构造一版fuse的模型，把权重转过去
+    输出误差在小数点后6位
 
 
     
