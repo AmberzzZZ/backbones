@@ -41,6 +41,7 @@
     rS50    |   15,894,192
     p3dr50  |   27,482,240
     csprx50 |   10,359,072
+    skrx50  |   28,009,696
 
 
 ## Stochastic Depth
@@ -80,6 +81,18 @@
     相当于连续两个线性层，bn相当于1x1的卷积
     训练好以后可以构造一版fuse的模型，把权重转过去
     输出误差在小数点后6位
+
+
+## SKNet
+    based on resNext50
+    M=2: number of kernel branches
+    C=32: cardinality
+    r=16: fc reduction ratio
+
+
+
+
+
 
 
     

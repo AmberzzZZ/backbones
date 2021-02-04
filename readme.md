@@ -2,7 +2,7 @@
     vgg16, vgg19, vgg for SSD
 
 2. ResNet
-    resnet18, resnet34, resnet50, resnet101, resnext, resnest, se-resne\*t, stochastic depth, CSP-resnet, 2.5D
+    resnet18, resnet34, resnet50, resnet101, resnext, resnest, se-resne\*t, stochastic depth, CSP-resnet, 2.5D, SENet, SKNet
 
 3. MobileNet
     mobileNetV1, mobileNetV2, mobileNetV3

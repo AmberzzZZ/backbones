@@ -29,7 +29,7 @@ def resnext(input_shape=(224,224,3), depth=50, C=32):
     return model
 
 
-def resnext_block(x, g_filters, n_filters, strides, C=32, se_ratio=0):
+def resnext_block(x, g_filters, n_filters, strides, C=32, se_ratio=16):
     inpt = x
     # 1x1conv-3x3group conv-1x1conv
     x = Conv_BN(inpt, g_filters, 1, strides=strides, activation='relu')

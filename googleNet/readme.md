@@ -55,7 +55,10 @@
         if id_skip is True and strides==1 and filters_in==filters_out:
 
     6. dropout
-        用在分类头上，
+        用在分类头上，还有backbone里面resnet block的id skip上
+        每个stage都用，衰减
+        skip上用dropout，residual上用se-block，都是为了强化语义信息
+        why not dropblock？
 
     7. activation
         全程swish
