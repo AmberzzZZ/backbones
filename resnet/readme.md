@@ -2,6 +2,13 @@
     keras和tensorflow里面没有group convolution（caffe和torch里面有）
     所以在构建静态图的时候，每层的C循环会影响效率，不知道实际计算资源分配的时候是不是并行的
 
+    how keras implements the Group Conv:
+    0. with feature input: [h,w,128], C=32, g_filters=4
+    1. depthwise conv: depth_multiplier=g_filters, [h,w,128,4]
+    2. reshape: splitting groups, [h,w,32,4,4]
+    3. fuse: sum by groups, by axis-1, [h,w,32,4]
+    4. reshape: flatten back to feature dims, [h,w,128]
+
 
 ## 写了一个keras的分组卷积层
     reference: https://github.com/fangwudi/Group-Depthwise-Conv3D-for-Keras
@@ -39,9 +46,10 @@
     rx50    |   23,082,240
     se-rx50 |   25,597,184
     rS50    |   15,894,192
-    p3dr50  |   27,482,240
-    csprx50 |   10,359,072
-    skrx50  |   28,009,696
+    p3d-r50 |   27,482,240
+    csp-rx50|   10,359,072
+    sk-rx50 |   28,009,696
+    gc-r50  |   26,110,096
 
 
 ## Stochastic Depth
@@ -88,6 +96,20 @@
     M=2: number of kernel branches
     C=32: cardinality
     r=16: fc reduction ratio
+
+
+## GCNet
+    official implemention: https://github.com/xvjiarui/GCNet/blob/master/mmdet/ops/gcb/context_block.py
+    based on ResNet50
+    stage_with_gcb=(False, True, True, True)   # C3,C4,C5
+    2 stage training:
+        * 先训resnet50
+        * 然后finetuning加了GC-block的resnet，frozen stem&stage1 layers
+
+
+
+
+
 
 
 
