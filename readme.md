@@ -15,3 +15,7 @@
 
 6. hourglass
     hourglass, hourglass for corner/centerNet
+
+7. utils
+    BN: syncBN, softBN
+    SGD: SoftSGD

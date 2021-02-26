@@ -1,8 +1,9 @@
 ## group conv
     keras和tensorflow里面没有group convolution（caffe和torch里面有）
     所以在构建静态图的时候，每层的C循环会影响效率，不知道实际计算资源分配的时候是不是并行的
+    参数量上用了group conv的conv层参数量会降低成原来的1/C
 
-    how keras implements the Group Conv:
+    how keras implements the Group Conv: (block3)[https://github.com/keras-team/keras/blob/0f8da5a7b814cb37baba868fc11fe8b10b3d4cf8/keras/applications/resnet.py]
     0. with feature input: [h,w,128], C=32, g_filters=4
     1. depthwise conv: depth_multiplier=g_filters, [h,w,128,4]
     2. reshape: splitting groups, [h,w,32,4,4]
