@@ -44,12 +44,12 @@
 
     4. drop_connect_rate
         用在mbconv block里面，随着层数加深这个值逐渐增大
-        dropout: 将输入单元的按比率随机设置为0，二维特征有一个noisy_shape参数
+        dropout: 将输入单元的按比率随机设置为0，高维特征有一个noisy_shape参数
         rate: 是drop rate，不是keep prob
         noisy_shape: 
             是一个一维张量，和输入x的shape的长度一样，e.g. x_shape: [B,H,W,C] ---> noisy_shape: [?,?,?,?]
             其中的元素只能是1或者x的shape中对应元素，哪个轴为1，哪个轴就会被一致地dropout
-            noise_shape=(None, 1, 1, 1)意味着我们希望一个batch的数据都遵循同一种的dropout模式————每个hwc的样本上被mute掉的元素位置相同
+            noise_shape=(None, 1, 1, 1)意味着我们希望一个batch内的数据dropout模式相互独立————每个hwc样本随机决定在当前这个residual path上通过/被截断置零
 
     5. residual condition
         if id_skip is True and strides==1 and filters_in==filters_out:
@@ -71,6 +71,10 @@
 
     9. convert weights
         h5解析: h5py._hl.dataset.Dataset数据结构和numpy数据结构
+
+    10. se-block
+        no_bias: SENet原论文里面发现，去掉se-block的两个fc层的bias有助于特征学习
+        但是eff官方权重里面是给se-block的conv带了bias的
 
 
 
