@@ -1,5 +1,4 @@
 from keras.layers import Conv2D, Input
-from keras.utils import conv_utils
 from keras.engine import InputSpec
 import keras.backend as K
 import tensorflow as tf

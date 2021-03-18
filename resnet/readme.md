@@ -51,6 +51,7 @@
     csp-rx50|   10,359,072
     sk-rx50 |   28,009,696
     gc-r50  |   26,110,096
+    se154   |  115,671,592
 
 
 ## Stochastic Depth
@@ -90,6 +91,24 @@
     相当于连续两个线性层，bn相当于1x1的卷积
     训练好以后可以构造一版fuse的模型，把权重转过去
     输出误差在小数点后6位
+
+
+## SENet
+    based on resNext
+    在每个residual path的结尾添加se-block
+    C=32: cardinality
+    r=16: fc reduction ratio
+
+    SOTA version: SENet-154
+    * based on 64x4d ResNext-152
+    * 每个bottleneck的第一个1x1 conv通道数减半: [g_filters//2, g_filters, g_filters]
+    * stem是3个3x3conv
+    * 1x1 s2conv替换成3x3 s2conv
+    * dropout before final fc
+    * wider: 64x4d说明g_filters start from 256
+    * label smoothing
+    * BN layers are frozen in the last few training steps
+    [reference] https://github.com/qixuxiang/mmdetection_with_SENet154/blob/master/mmdet/models/backbones/senet.py
 
 
 ## SKNet
