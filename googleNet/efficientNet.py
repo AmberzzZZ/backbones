@@ -47,7 +47,7 @@ DENSE_KERNEL_INITIALIZER = {
     }
 }
 
-KERNEL_REGULIZER = l2(l=1e-5)
+KERNEL_REGULIZER = l2(1e-5)
 
 
 def EfficientNet(input_shape, width_coefficient, depth_coefficient, dropout_rate=0.2,
@@ -85,7 +85,8 @@ def EfficientNet(input_shape, width_coefficient, depth_coefficient, dropout_rate
     x = GlobalAveragePooling2D()(x)
     if dropout_rate > 0:
         x = Dropout(dropout_rate)(x)
-    x = Dense(n_classes, activation='softmax', kernel_initializer=DENSE_KERNEL_INITIALIZER)(x)
+    x = Dense(n_classes, activation='softmax', kernel_initializer=DENSE_KERNEL_INITIALIZER,
+              kernel_regularizer=KERNEL_REGULIZER, bias_regularizer=KERNEL_REGULIZER)(x)
 
     model = Model(inpt, x)
 

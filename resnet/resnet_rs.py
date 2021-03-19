@@ -2,11 +2,13 @@
 from keras.layers import Input, Conv2D, BatchNormalization, ReLU, add, GlobalAveragePooling2D, \
                          Reshape, Dense, multiply, Dropout, AveragePooling2D
 from keras.models import Model
+from keras.regularizers import l2
 
 
 n_blocks = {50: [3,4,6,3], 101: [3,4,23,3], 152: [3,8,36,3], 200: [3,24,36,3],
             270: [4,29,53,4], 350: [4,36,72,4], 420: [4,44,87,4]}
 n_filters = [256, 512, 1024, 2048]
+KERNEL_REGULIZER = l2(4e-5)
 
 
 def resnet_rs(input_shape=(224,224,3), n_classes=1000, depth=50, se_ratio=.25,
@@ -32,7 +34,8 @@ def resnet_rs(input_shape=(224,224,3), n_classes=1000, depth=50, se_ratio=.25,
     x = GlobalAveragePooling2D()(x)
     if drop_rate:
         x = Dropout(drop_rate)(x)
-    x = Dense(n_classes, activation='softmax')(x)
+    x = Dense(n_classes, activation='softmax', kernel_regularizer=KERNEL_REGULIZER,
+              bias_regularizer=KERNEL_REGULIZER)(x)
 
     # model
     model = Model(inpt, x)
@@ -65,7 +68,8 @@ def res_block(x, n_filters, strides, se_ratio=0.25, stochastic_rate=0., bn_momen
 
 
 def Conv_BN(x, n_filters, kernel_size, strides, bn=True, activation=None, bn_momentum=0.9999):
-    x = Conv2D(n_filters, kernel_size, strides=strides, padding='same', use_bias=False)(x)
+    x = Conv2D(n_filters, kernel_size, strides=strides, padding='same', use_bias=False,
+               kernel_regularizer=KERNEL_REGULIZER)(x)
     if bn:
         x = BatchNormalization(momentum=bn_momentum)(x)
     if activation:
@@ -77,8 +81,12 @@ def SE_block(inpt, ratio=.25):     # spatial squeeze and channel excitation
     x = inpt
     n_filters = x._keras_shape[-1]
     x = GlobalAveragePooling2D()(x)
-    x = Dense(int(n_filters*ratio), activation='relu', use_bias=False)(x)
-    x = Dense(n_filters, activation='sigmoid', use_bias=False)(x)
+    x = Dense(int(n_filters*ratio), activation='relu', use_bias=True,
+              kernel_regularizer=KERNEL_REGULIZER,
+              bias_regularizer=KERNEL_REGULIZER)(x)
+    x = Dense(n_filters, activation='sigmoid', use_bias=True,
+              kernel_regularizer=KERNEL_REGULIZER,
+              bias_regularizer=KERNEL_REGULIZER)(x)
     x = Reshape((1,1,n_filters))(x)
     x = multiply([inpt, x])
     return x
