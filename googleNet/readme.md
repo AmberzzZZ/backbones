@@ -10,7 +10,7 @@
     1. 从论文的acc pk上看，B0的精度就超过resnet了，B3及以上吊打resdeeper家族
     2. 但是我用B0实际实验（简单六分类）下来并没有
     3. B0-B7: finer & wider & deeper, input_size增大，channel加宽，layers加深
-        |  network  | input_size |   width  |  deepth  | dropout_rate |
+        |  network  | input_size |   width  |   depth  | dropout_rate |
         |     B0    |     224    |    1.0   |    1.0   |      0.2     |
         |     B1    |     240    |    1.0   |    1.1   |      0.2     | 
         |     B2    |     260    |    1.1   |    1.2   |      0.3     | 
@@ -26,6 +26,17 @@
         scikit-image
 
     5. todo：B4(https://www.kaggle.com/jimitshah777/bilinear-efficientnet-focal-loss-label-smoothing)
+
+
+## training details
+    * RMSProp: decay=0.9, momentum(rho)=0.9
+    * BN: momentum=0.99
+    * weight decay = 1e-5
+    * lr: initial=0.256, decays by 0.97 every 2.4 epochs
+    * SiLU activation
+    * AutoAugment
+    * Stochastic depth: survive_prob = 0.8
+    * dropout rate: 0.2 to 0.5 for B0 to B7
 
 
 ## efficientNet details

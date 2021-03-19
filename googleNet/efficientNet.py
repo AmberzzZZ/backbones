@@ -1,6 +1,7 @@
 from keras.layers import Input, Conv2D, BatchNormalization, Activation, DepthwiseConv2D, Multiply,\
                          GlobalAveragePooling2D, Reshape, Dropout, add, Dense
 from keras.models import Model
+from keras.regularizers import l2
 import keras.backend as K
 import math
 import copy
@@ -45,6 +46,8 @@ DENSE_KERNEL_INITIALIZER = {
         'distribution': 'uniform'
     }
 }
+
+KERNEL_REGULIZER = l2(l=1e-5)
 
 
 def EfficientNet(input_shape, width_coefficient, depth_coefficient, dropout_rate=0.2,
@@ -125,11 +128,11 @@ def se_block(x, dense_dim):
     x = GlobalAveragePooling2D()(x)
     x = Reshape((1,1,in_channels))(x)
     # reduce
-    x = Conv2D(dense_dim, 1, strides=1, padding='same', use_bias=False,
-               activation=swish, kernel_initializer=CONV_KERNEL_INITIALIZER)(x)
+    x = Conv2D(dense_dim, 1, strides=1, padding='same', use_bias=False, activation=swish,
+               kernel_initializer=CONV_KERNEL_INITIALIZER, kernel_regularizer=KERNEL_REGULIZER)(x)
     # excite
-    x = Conv2D(in_channels, 1, strides=1, padding='same', use_bias=False,
-               activation='sigmoid', kernel_initializer=CONV_KERNEL_INITIALIZER)(x)
+    x = Conv2D(in_channels, 1, strides=1, padding='same', use_bias=False, activation='sigmoid',
+               kernel_initializer=CONV_KERNEL_INITIALIZER, kernel_regularizer=KERNEL_REGULIZER)(x)
     # reweight
     x = Multiply()([inpt, x])
     return x
@@ -140,8 +143,9 @@ def swish(x):
 
 
 def Conv_BN(x, n_filters, kernel_size=3, strides=1, padding='same', activation=swish,
-            kernel_initializer=CONV_KERNEL_INITIALIZER):
-    x = Conv2D(n_filters, kernel_size, strides=strides, padding=padding, use_bias=False, kernel_initializer=kernel_initializer)(x)
+            kernel_initializer=CONV_KERNEL_INITIALIZER, kernel_regularizer=KERNEL_REGULIZER):
+    x = Conv2D(n_filters, kernel_size, strides=strides, padding=padding, use_bias=False,
+               kernel_initializer=kernel_initializer, kernel_regularizer=kernel_regularizer)(x)
     x = BatchNormalization()(x)
     if activation:
         x = Activation(activation)(x)
@@ -149,8 +153,9 @@ def Conv_BN(x, n_filters, kernel_size=3, strides=1, padding='same', activation=s
 
 
 def DW_Conv_BN(x, kernel_size=3, strides=1, padding='same', activation=swish,
-               kernel_initializer=CONV_KERNEL_INITIALIZER):
-    x = DepthwiseConv2D(kernel_size, strides=strides, padding=padding, use_bias=False, depthwise_initializer=kernel_initializer)(x)
+               kernel_initializer=CONV_KERNEL_INITIALIZER, kernel_regularizer=KERNEL_REGULIZER):
+    x = DepthwiseConv2D(kernel_size, strides=strides, padding=padding, use_bias=False, 
+                        depthwise_initializer=kernel_initializer, depthwise_regularizer=kernel_regularizer)(x)
     x = BatchNormalization()(x)
     if activation:
         x = Activation(activation)(x)
@@ -205,8 +210,9 @@ def EfficientNetB7():
 
 if __name__ == '__main__':
 
-    model = EfficientNet(512, 1.8, 2.6, 0.5)
-    model.load_weights("/Users/amber/Downloads/efficientnet-b6_noisy-student_notop.h5")
+    # model = EfficientNet(512, 1.8, 2.6, 0.5)
+    model = EfficientNetB7()
+    # model.load_weights("/Users/amber/Downloads/efficientnet-b6_noisy-student_notop.h5")
     model.summary()
 
     # newmodel = Model(model.input, model.get_layer(index=-4).output)

@@ -52,6 +52,7 @@ def res_block(x, n_filters, strides, se_ratio=0.25, stochastic_rate=0., bn_momen
     # stochastic depth
     if stochastic_rate:
         x = Dropout(stochastic_rate, noise_shape=(1,1,1,1))(x)   # (None,1,1,1)
+
     # shortcut
     if strides!=1:
         inpt = AveragePooling2D(pool_size=2, strides=2, padding='same')(inpt)
@@ -123,7 +124,7 @@ def resnet_rs420(n_classes):
 
 if __name__ == '__main__':
 
-    model = resnet_rs50(n_classes=1000)
+    model = resnet_rs(n_classes=1000, stochastic_rate=.2)
     model.summary()
     # model.load_weights("resnet50_weights_tf_dim_ordering_tf_kernels.h5")
 
