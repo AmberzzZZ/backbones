@@ -52,6 +52,7 @@
     sk-rx50 |   28,009,696
     gc-r50  |   26,110,096
     se154   |  115,671,592
+    r50_rs  |   33,613,248
 
 
 ## Stochastic Depth
@@ -125,6 +126,17 @@
     2 stage training:
         * 先训resnet50
         * 然后finetuning加了GC-block的resnet，frozen stem&stage1 layers
+
+
+## ResNet_RS
+    architecture:
+    * stem的7x7conv换成3个3x3conv
+    * stem的maxpooling去掉，每个stage的首个3x3conv负责stride2
+    * residual path上前两个卷积的stride互换（在3x3上下采样）
+    * id path上的1x1 s2conv替换成2x2 s2的avg pooling+1x1conv
+    * use se-ratio of 0.25
+
+    参数量比se-r50多: 主要因为se_ratio变了
 
 
 
