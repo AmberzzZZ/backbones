@@ -10,13 +10,13 @@ n_filters = [256, 512, 1024, 2048]
 
 
 def resnet_rs(input_shape=(224,224,3), n_classes=1000, depth=50, se_ratio=.25,
-              drop_rate=0.25, stochastic_rate=0.0):
+              drop_rate=0.25, stochastic_rate=0.0, bn_momentum=0.9999):
     inpt = Input(input_shape)
 
     # stem: conv+bn+relu+pool
-    x = Conv_BN(inpt, 64, 3, strides=2, activation='relu')
-    x = Conv_BN(inpt, 64, 3, strides=1, activation='relu')
-    x = Conv_BN(inpt, 64, 3, strides=1, activation='relu')
+    x = Conv_BN(inpt, 64, 3, strides=2, activation='relu', bn_momentum=bn_momentum)
+    x = Conv_BN(inpt, 64, 3, strides=1, activation='relu', bn_momentum=bn_momentum)
+    x = Conv_BN(inpt, 64, 3, strides=1, activation='relu', bn_momentum=bn_momentum)
 
     # blocks
     num_blocks = n_blocks[depth]
@@ -26,7 +26,7 @@ def resnet_rs(input_shape=(224,224,3), n_classes=1000, depth=50, se_ratio=.25,
         for j in range(num_blocks[i]):
             strides = 2 if j==0 else 1
             stochastic_drop = stochastic_rate * b / total_blocks
-            x = res_block(x, n_filters[i], strides, stochastic_rate=stochastic_drop)
+            x = res_block(x, n_filters[i], strides, se_ratio, stochastic_drop, bn_momentum)
             b += 1
 
     x = GlobalAveragePooling2D()(x)
@@ -40,12 +40,12 @@ def resnet_rs(input_shape=(224,224,3), n_classes=1000, depth=50, se_ratio=.25,
     return model
 
 
-def res_block(x, n_filters, strides, se_ratio=0.25, stochastic_rate=0.):
+def res_block(x, n_filters, strides, se_ratio=0.25, stochastic_rate=0., bn_momentum=0.9999):
     inpt = x
     # residual
-    x = Conv_BN(x, n_filters//4, 1, strides=1, activation='relu')
-    x = Conv_BN(x, n_filters//4, 3, strides=strides, activation='relu')
-    x = Conv_BN(x, n_filters, 1, strides=1, activation=None)
+    x = Conv_BN(x, n_filters//4, 1, strides=1, activation='relu', bn_momentum=bn_momentum)
+    x = Conv_BN(x, n_filters//4, 3, strides=strides, activation='relu', bn_momentum=bn_momentum)
+    x = Conv_BN(x, n_filters, 1, strides=1, bn=False, activation=None)
     # se
     if se_ratio:
         x = SE_block(x, se_ratio)
@@ -55,16 +55,18 @@ def res_block(x, n_filters, strides, se_ratio=0.25, stochastic_rate=0.):
     # shortcut
     if strides!=1:
         inpt = AveragePooling2D(pool_size=2, strides=2, padding='same')(inpt)
-        inpt = Conv_BN(inpt, n_filters, 1, strides=1, activation=None)
+        inpt = Conv_BN(inpt, n_filters, 1, strides=1, bn=False, activation=None)
 
     x = add([inpt, x])
+    x = BatchNormalization(momentum=bn_momentum)(x)
     x = ReLU()(x)
     return x
 
 
-def Conv_BN(x, n_filters, kernel_size, strides, activation=None):
+def Conv_BN(x, n_filters, kernel_size, strides, bn=True, activation=None, bn_momentum=0.9999):
     x = Conv2D(n_filters, kernel_size, strides=strides, padding='same', use_bias=False)(x)
-    x = BatchNormalization()(x)
+    if bn:
+        x = BatchNormalization(momentum=bn_momentum)(x)
     if activation:
         x = ReLU()(x)
     return x
@@ -74,9 +76,9 @@ def SE_block(inpt, ratio=.25):     # spatial squeeze and channel excitation
     x = inpt
     n_filters = x._keras_shape[-1]
     x = GlobalAveragePooling2D()(x)
-    x = Reshape((1,1,n_filters))(x)
     x = Dense(int(n_filters*ratio), activation='relu', use_bias=False)(x)
     x = Dense(n_filters, activation='sigmoid', use_bias=False)(x)
+    x = Reshape((1,1,n_filters))(x)
     x = multiply([inpt, x])
     return x
 
@@ -100,23 +102,23 @@ def resnet_rs152(n_classes):
 
 def resnet_rs200(n_classes):
     return resnet_rs(input_shape=(256,256,3), n_classes=n_classes, depth=200,
-                     drop_rate=0.25, stochastic_rate=0.1)
+                     drop_rate=0.25, stochastic_rate=0.2)
 
 
 def resnet_rs270(n_classes):
-    return resnet_rs(input_shape=(256,256,3), n_classes=n_classes, depth=200,
-                     drop_rate=0.25, stochastic_rate=0.1)
+    return resnet_rs(input_shape=(256,256,3), n_classes=n_classes, depth=270,
+                     drop_rate=0.25, stochastic_rate=0.2)
 
 
 def resnet_rs350(n_classes):
     # input_shape = [256, 320]
-    return resnet_rs(input_shape=(256,256,3), n_classes=n_classes, depth=200,
-                     drop_rate=0.4, stochastic_rate=0.1)
+    return resnet_rs(input_shape=(256,256,3), n_classes=n_classes, depth=350,
+                     drop_rate=0.4, stochastic_rate=0.2)
 
 
 def resnet_rs420(n_classes):
-    return resnet_rs(input_shape=(320,320,3), n_classes=n_classes, depth=200,
-                     drop_rate=0.4, stochastic_rate=0.1)
+    return resnet_rs(input_shape=(320,320,3), n_classes=n_classes, depth=420,
+                     drop_rate=0.4, stochastic_rate=0.2)
 
 
 if __name__ == '__main__':

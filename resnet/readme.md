@@ -52,7 +52,7 @@
     sk-rx50 |   28,009,696
     gc-r50  |   26,110,096
     se154   |  115,671,592
-    r50_rs  |   33,613,248
+    r50_rs  |   33,597,888
 
 
 ## Stochastic Depth
@@ -137,6 +137,20 @@
     * use se-ratio of 0.25
 
     参数量比se-r50多: 主要因为se_ratio变了
+
+    hyper:
+    * label smoothing = 0.1
+    * weight decay = 4e-5
+    * dropout rate: 标准network width下是0.25，wider increase，vice versa
+    * stochastic drop rate: 0.2 for resolutions 224 and above
+
+    training settings:
+    * regularization for 10 and 100 epochs: flips & crops, weight decay
+    * regularization longer training epochs: RandAugment, Dropout, Stochastic Depth, Label Smoothing, weight decay
+    * lr schedule: cosine
+    * optimizer: SGD-M, 
+    * EMA = 0.9999, both for weights and BN
+
 
 
 
