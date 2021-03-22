@@ -129,10 +129,10 @@ def se_block(x, dense_dim):
     x = GlobalAveragePooling2D()(x)
     x = Reshape((1,1,in_channels))(x)
     # reduce
-    x = Conv2D(dense_dim, 1, strides=1, padding='same', use_bias=False, activation=swish,
+    x = Conv2D(dense_dim, 1, strides=1, padding='same', use_bias=True, activation=swish,
                kernel_initializer=CONV_KERNEL_INITIALIZER, kernel_regularizer=KERNEL_REGULIZER)(x)
     # excite
-    x = Conv2D(in_channels, 1, strides=1, padding='same', use_bias=False, activation='sigmoid',
+    x = Conv2D(in_channels, 1, strides=1, padding='same', use_bias=True, activation='sigmoid',
                kernel_initializer=CONV_KERNEL_INITIALIZER, kernel_regularizer=KERNEL_REGULIZER)(x)
     # reweight
     x = Multiply()([inpt, x])
@@ -211,14 +211,13 @@ def EfficientNetB7():
 
 if __name__ == '__main__':
 
-    # model = EfficientNet(512, 1.8, 2.6, 0.5)
-    model = EfficientNetB7()
-    # model.load_weights("/Users/amber/Downloads/efficientnet-b6_noisy-student_notop.h5")
-    model.summary()
+    model = EfficientNet(380, 1.4, 1.8, 0.4)
+    model.load_weights("weights/efficientnet-b4_weights_tf_dim_ordering_tf_kernels.h5")
+    # model.summary()
 
     # newmodel = Model(model.input, model.get_layer(index=-4).output)
     # newmodel.summary()
-    # newmodel.save_weights('eff_b4_notop.h5')
+    model.save_weights('eff_b4.h5')
     # print(newmodel.input, newmodel.get_layer(index=1).output)
 
 

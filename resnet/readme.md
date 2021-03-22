@@ -1,3 +1,12 @@
+## resnet
+    data gen: resize by [256,480] and crop by [224,224], subtract sper pixel meam
+    structure: conv-bn-relu
+    SGD: momentum=0.9
+    lr: start from 0.1, divided by 10 when plateau
+    weight decay: 1e-4, 用了较大的weight decay系数，比拥有strong regularization methods的efficientNet高了一个数量级
+    do not use dropout!!! 原论文没用dropout
+    
+
 ## group conv
     keras和tensorflow里面没有group convolution（caffe和torch里面有）
     所以在构建静态图的时候，每层的C循环会影响效率，不知道实际计算资源分配的时候是不是并行的

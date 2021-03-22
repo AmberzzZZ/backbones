@@ -15,15 +15,15 @@ if __name__ == '__main__':
     # # read conv1 weights
     # for layer, g in f.items():
     #     for name, d in g.items():
-    #         if name == 'conv2d_1':
-    #             print('name:   ', name, d)
-    #             weights = d.get('kernel:0')
-    #             print(type(weights))
-    #             print(weights.shape, np.max(weights), np.min(weights))
-    #             tmp = weights[:]
-    #             print(type(tmp))
+            # if name == 'conv2d_1':
+            #     print('name:   ', name, d)
+            #     weights = d.get('kernel:0')
+            #     print(type(weights))
+            #     print(weights.shape, np.max(weights), np.min(weights))
+            #     tmp = weights[:]
+            #     print(type(tmp))
     # f.close()
-    # # pad to (3,3,5,48)
+    # pad to (3,3,5,48)
     # weights = np.pad(tmp, ((0,0),(0,0),(1,1),(0,0)), mode='constant')
 
     # # step3: set weights, set conv1 weights with the duplicated weights, set the rest with origin weights
