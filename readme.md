@@ -19,3 +19,4 @@
 7. utils
     BN: syncBN, softBN
     SGD: SoftSGD
+    AdamW: Adam with weight decay

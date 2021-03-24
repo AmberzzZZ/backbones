@@ -16,3 +16,8 @@
     - 用keras的multi_gpu方法进行单机多卡训练，多卡模型上的BN本身就是同步的，BN layer的四个参数在构建图的时候被声明，在每一个step每个模型的所有参数都保持一致
     - 分布式训练的情况下，需要显式地自行配置
 
+
+## AdamW
+    Adam with weight decay
+    将weight decay集成进keras的optimizer，替换layer regularization
+
