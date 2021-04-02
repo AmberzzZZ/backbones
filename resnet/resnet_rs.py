@@ -1,6 +1,6 @@
 # resnet 50 & 101
 from keras.layers import Input, Conv2D, BatchNormalization, ReLU, add, GlobalAveragePooling2D, \
-                         Reshape, Dense, multiply, Dropout, AveragePooling2D
+                         Reshape, Dense, multiply, Dropout, AveragePooling2D, Layer
 from keras.models import Model
 from keras.regularizers import l2
 
@@ -17,8 +17,8 @@ def resnet_rs(input_shape=(224,224,3), n_classes=1000, depth=50, se_ratio=.25,
 
     # stem: conv+bn+relu+pool
     x = Conv_BN(inpt, 64, 3, strides=2, activation='relu', bn_momentum=bn_momentum)
-    x = Conv_BN(inpt, 64, 3, strides=1, activation='relu', bn_momentum=bn_momentum)
-    x = Conv_BN(inpt, 64, 3, strides=1, activation='relu', bn_momentum=bn_momentum)
+    x = Conv_BN(x, 64, 3, strides=1, activation='relu', bn_momentum=bn_momentum)
+    x = Conv_BN(x, 64, 3, strides=1, activation='relu', bn_momentum=bn_momentum)
 
     # blocks
     num_blocks = n_blocks[depth]
@@ -75,6 +75,17 @@ def Conv_BN(x, n_filters, kernel_size, strides, bn=True, activation=None, bn_mom
     if activation:
         x = ReLU()(x)
     return x
+
+
+class WeightDecayL2(Layer):
+    def __init__(self, weight_decay=0.):
+        super(WeightDecayL2, self).__init__()
+        self.weight_decay = weight_decay
+
+    def call(self, input):
+        
+
+
 
 
 def SE_block(inpt, ratio=.25):     # spatial squeeze and channel excitation

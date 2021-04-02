@@ -153,12 +153,20 @@
     * dropout rate: 标准network width下是0.25，wider increase，vice versa
     * stochastic drop rate: 0.2 for resolutions 224 and above
 
-    training settings:
+    training settings from paper:
     * regularization for 10 and 100 epochs: flips & crops, weight decay
     * regularization longer training epochs: RandAugment, Dropout, Stochastic Depth, Label Smoothing, weight decay
     * lr schedule: cosine
     * optimizer: SGD-M, 
     * EMA = 0.9999, both for weights and BN
+
+    training settings from source code:
+    * BN momentum=0.9
+    * weight_decay implementation: loss = cross_entropy + weight_decay*sum([l2_loss(i) for i in trainable_params_exclude_bn])
+    * EMA=0.9999 implementation: ema on the the trainable variables, include bn
+    * SGDM momentum=0.9
+    * scheduled drop_prob: 随着training step变化
+    * 先做一次梯度更新，然后对新的权重计算EMA，用EMA的结果作为最终的权重
 
 
 

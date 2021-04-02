@@ -21,3 +21,16 @@
     Adam with weight decay
     将weight decay集成进keras的optimizer，替换layer regularization
 
+
+## SGDW
+    SGD with weight_decay & EMA
+    EMA: 
+    * 详见[13. keras实现权重滑动平均][https://amberzzzz.github.io/2019/08/14/keras-note/]
+    * google的efficientnet & resnet_rs都有用
+    保存的网络权重里面，每个层有一个weights，一个moments，还有一个ema_moments，在inference阶段还有实现将ema_moments加载为网络权重
+
+
+
+
+
+

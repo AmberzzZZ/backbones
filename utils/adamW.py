@@ -90,6 +90,21 @@ class AdamW(Optimizer):
         return dict(list(base_config.items()) + list(config.items()))
 
 
+if __name__ == '__main__':
+
+    import numpy as np
+    from keras.layers import Input, GlobalAveragePooling2D, Dense
+    from keras.models import Model
+
+    inpt = Input((224,224,3))
+    x = GlobalAveragePooling2D()(inpt)
+    x = Dense(2, activation='softmax')(x)
+    model = Model(inpt, x)
+    model.compile(AdamW(lr=1e-3, weight_decay=1e-4), 'categorical_crossentropy')
+
+    X = np.random.uniform(0, 1, (32,224,224,3))
+    y = np.random.random_integers(0, 1, (32,2))
+    model.fit(X,y,epochs=10, batch_size=16, verbose=1)
 
 
 
