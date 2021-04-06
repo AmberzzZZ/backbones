@@ -88,6 +88,22 @@
         但是eff官方权重里面是给se-block的conv带了bias的
 
 
+## efficientNetV2
+    
+    * settings
+        RMSProp optimizer with decay 0.9 and momentum 0.9
+        batch norm momentum 0.99
+        weight decay 1e-5
+        total epochs 350
+        LR is first warmed up from 0 to 0.256, and then decayed by 0.97 every 2.4 epochs
+        EMA with 0.9999 decay rate
+        stochastic depth with 0.8 survival probability
+        adaptive RandAugment, Mixup, Dropout: 4 stages (87 epoch per stage)
+        inference: use 20% smaller than the maximum image size
+
+
+    * uncertain
+        scale up factors
 
 
 
