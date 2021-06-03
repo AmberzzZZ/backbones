@@ -24,10 +24,13 @@
 
 ## SGDW
     SGD with weight_decay & EMA
-    EMA: 
+    EMA: exponential moving average
     * 详见[13. keras实现权重滑动平均][https://amberzzzz.github.io/2019/08/14/keras-note/]
     * google的efficientnet & resnet_rs都有用
-    保存的网络权重里面，每个层有一个weights，一个moments，还有一个ema_moments，在inference阶段还有实现将ema_moments加载为网络权重
+    多卡训练的情况，single_model也要compile一下，否则保存的只有model_weights没有optimizer_weights
+    保存的h5权重里面，有model_weights&optimizer_weights两个item，SGDW里面创建的变量存储在optimizer_weights里面
+    官方tfckpt每个层的权重整合在一个group，有weights，moments，和ema_moments，
+    在inference阶段还有实现将ema_moments加载为网络权重
 
 
 

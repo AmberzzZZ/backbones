@@ -25,11 +25,10 @@ class SGDW(Optimizer):
         self.momentum = momentum
 
     def _create_all_weights(self, params):
-        shapes = [K.int_shape(p) for p in params]
-        moments = [K.zeros(shape) for shape in shapes]
-        ema_moments = [K.zeros(shape) for shape in shapes]
-        self.weights = [self.iterations] + moments + ema_moments
-        return moments, ema_moments
+        moments = [K.zeros(K.int_shape(p), name=p.name.split('/')[0]+'/ms') for p in params]
+        ema_weights = [K.variable(p, name=p.name.split('/')[0]+'/ema') for p in params]
+        self.weights = [self.iterations] + moments + ema_weights
+        return moments, ema_weights
 
     def get_updates(self, loss, params):
         grads = self.get_gradients(loss, params)
@@ -39,8 +38,8 @@ class SGDW(Optimizer):
         if self.initial_decay > 0:
             lr = lr * (1. / (1. + self.decay * tf.cast(self.iterations, K.dtype(self.decay))))
 
-        moments, ema_moments = self._create_all_weights(params)
-        for p, g, m, e in zip(params, grads, moments, ema_moments):
+        moments, ema_weights = self._create_all_weights(params)
+        for p, g, m, e in zip(params, grads, moments, ema_weights):
             # moments
             v = self.momentum * m - lr*g
             self.updates.append(K.update(m, v))

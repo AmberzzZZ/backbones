@@ -17,7 +17,7 @@ DEFAULT_BLOCKS_ARGS = [
      'expand_ratio': 4, 'id_skip': True, 'strides': 2, 'se_ratio': 0.25},
     {'kernel_size': 3, 'repeats': 9, 'filters_in': 128, 'filters_out': 160,
      'expand_ratio': 6, 'id_skip': True, 'strides': 1, 'se_ratio': 0.25},
-    {'kernel_size': 3, 'repeats': 15, 'filters_in': 160, 'filters_out': 272,
+    {'kernel_size': 3, 'repeats': 15, 'filters_in': 160, 'filters_out': 272,   # 256
      'expand_ratio': 6, 'id_skip': True, 'strides': 2, 'se_ratio': 0.25},
 ]
 
@@ -45,16 +45,13 @@ DENSE_KERNEL_INITIALIZER = {
 }
 
 
-def EfficientNetV2(input_shape=128, width_coefficient=1., depth_coefficient=1., dropout_rate=0.1,
-                   n_classes=1000, drop_connect_rate=0.2, blocks_args=DEFAULT_BLOCKS_ARGS,
+def EfficientNetV2(input_size, width_coefficient=1., depth_coefficient=1., dropout_rate=0.1, n_classes=1000,
+                   drop_connect_rate=0.2, blocks_args=DEFAULT_BLOCKS_ARGS,
                    depth_divisor=8):
 
     blocks_args = copy.deepcopy(blocks_args)
 
-    if isinstance(input_shape, tuple):
-        inpt = Input(input_shape)
-    else:
-        inpt = Input((input_shape,input_shape,3))
+    inpt = Input((input_size,input_size,3))
 
     # stem
     x = Conv_BN(inpt, round_filters(24, width_coefficient), 3, strides=2)
@@ -63,7 +60,7 @@ def EfficientNetV2(input_shape=128, width_coefficient=1., depth_coefficient=1., 
     b = 0
     blocks = float(sum(args['repeats'] for args in blocks_args))
     # for each block group
-    for block_arg in blocks_args:
+    for block_arg in blocks_args[:]:
         # for each mbconv block
         block_arg['repeats'] = round_repeats(block_arg['repeats'], depth_coefficient)
         block_arg['filters_in'] = round_filters(block_arg['filters_in'], width_coefficient)
@@ -76,11 +73,12 @@ def EfficientNetV2(input_shape=128, width_coefficient=1., depth_coefficient=1., 
             b += 1
 
     # top
-    x = Conv_BN(x, round_filters(1792, width_coefficient), 1, strides=1)
-    x = GlobalAveragePooling2D()(x)
-    if dropout_rate > 0:
-        x = Dropout(dropout_rate)(x)
-    x = Dense(n_classes, activation='softmax', kernel_initializer=DENSE_KERNEL_INITIALIZER)(x)
+    x = Conv_BN(x, round_filters(1792, width_coefficient), 1, strides=1)   # 1280
+
+    # x = GlobalAveragePooling2D()(x)
+    # if dropout_rate > 0:
+    #     x = Dropout(dropout_rate)(x)
+    # x = Dense(n_classes, activation='softmax', kernel_initializer=DENSE_KERNEL_INITIALIZER)(x)
 
     model = Model(inpt, x)
 
@@ -110,7 +108,9 @@ def efficientBlock(x, drop_rate=0., kernel_size=3, repeats=1, filters_in=32, fil
         x = Conv_BN(x, n_filters, kernel_size=kernel_size, strides=strides)
 
     # PW-project
-    x = Conv_BN(x, filters_out, kernel_size=1, strides=1, activation=None)
+    if expand_ratio>1:
+        x = Conv_BN(x, filters_out, kernel_size=1, strides=1, activation=None)
+        print(filters_out)
 
     # residual
     if id_skip is True and strides==1 and filters_in==filters_out:
@@ -175,14 +175,8 @@ def round_repeats(repeats, depth_coefficient):
 
 if __name__ == '__main__':
 
-    model = EfficientNetV2(128, dropout_rate=0.1)
-    # model.load_weights("weights/efficientnet-b4_weights_tf_dim_ordering_tf_kernels.h5")
+    model = EfficientNetV2(input_size=128, n_classes=30, dropout_rate=0.1)
     model.summary()
-
-    # newmodel = Model(model.input, model.get_layer(index=-4).output)
-    # newmodel.summary()
-    # model.save_weights('eff_b4.h5')
-    # print(newmodel.input, newmodel.get_layer(index=1).output)
 
 
 

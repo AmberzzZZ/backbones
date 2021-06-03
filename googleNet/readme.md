@@ -88,7 +88,53 @@
         但是eff官方权重里面是给se-block的conv带了bias的
 
 
+
+## noisy-student & EfficientNet-L2
+
+    top1 acc 88.4% with 300M additional unlabeled images
+
+    teacher:
+    * train with labeled images & standard CE at the begining
+    * produce high-quality pseudo labels by reading in clean images
+    * pseudo labels can be soft or hard
+    * a larger and better teacher model leads to better results
+
+    train student: 
+    * larger efficientNet
+    * not smaller than the teacher
+    * optmize by CE on labeled & unlabeled images
+    * common regularizations: dropout & stochastic depth & RandAugment
+
+    pseudo data distribution:
+    * select images that have confidence above 0.3
+    * keep uniform distribution for each class
+    * 样本多的类别，取highest confidence的
+    * 样本少的类别，复制副本
+
+    EfficientNet-L2
+    * wider & deeper than EfficientNet-B7
+    * but lower resolution
+    |  network  | input_size |   width  |   depth  | dropout_rate |  test_reso  | 
+    |     B7    |     600    |    2.0   |    3.1   |      0.5     |     600     |
+    |     L2    |     475    |    4.3   |    5.3   |      0.5     |     800     |
+    * finetune 1.5 epochs for test resolution on unaugmented labeled images
+
+    training details
+    * batch size: [512,1024,2048]都一样
+    * 700 steps for model smaller than B4 & 350 steps for the largers
+    * lr: 0.128 for batch 2048, decay by 0.97 every 2.4/4.8 epochs(for 350/700 steps)
+    * stochastic prob: 0.8 for the last layer & linear decay rule
+    * dropout: 0.5, for final layer
+    * RandAugment: N=2, M=27
+
+
+
 ## efficientNetV2
+    
+    * 转权重的时候发现和论文结构不一致的地方：
+        最后一个MB的输出channel是256，不是论文里的272
+        top的第一个convBN的输出channel是1280，不是论文里的1792
+    
     
     * settings
         RMSProp optimizer with decay 0.9 and momentum 0.9
@@ -99,11 +145,16 @@
         EMA with 0.9999 decay rate
         stochastic depth with 0.8 survival probability
         adaptive RandAugment, Mixup, Dropout: 4 stages (87 epoch per stage)
-        inference: use 20% smaller than the maximum image size
+        inference: 
+            maximum image size for training is about 20% smaller than inference & no further finetuning
+            max inference 480 -> max train 394
 
 
-    * uncertain
-        scale up factors
+    * uncertain: scaling policy
+        compound scaling
+        max inference image size 480
+        gradually add more layers to later stages
+        waiting for particular scale up factors...
 
 
 
