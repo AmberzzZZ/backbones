@@ -5,6 +5,20 @@
     lr: start from 0.1, divided by 10 when plateau
     weight decay: 1e-4, 用了较大的weight decay系数，比拥有strong regularization methods的efficientNet高了一个数量级
     do not use dropout!!! 原论文没用dropout
+
+
+## resnet12 & resnet18
+    活跃在few-shot learning领域的两个轻量back
+
+    resnet18的结构图原论文里有:
+    * baseblock不用bottleneck，而是两个3x3 conv
+    * stage2-stage5的resblock重复两次
+
+    few-shot paper TADAM's definition of ResNet-12:
+    * It has 4 blocks of depth 3 with 3x3 kernels and shortcut connections. 
+    * 2x2 max-pool is applied at the end of each block. 
+    * Convolutional layer depth starts with 64 filters and is doubled after every max-pool
+    * dropblock for stage3&4, dropblock_size=5
     
 
 ## group conv

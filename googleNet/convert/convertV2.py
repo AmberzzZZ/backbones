@@ -1,5 +1,6 @@
 import pandas as pd
 import pickle
+from efficientNetV2 import EfficientNetV2
 
 
 def aggregate_by_field(weights, idx):
@@ -91,8 +92,33 @@ if __name__ == '__main__':
     print(len(weights_keras))
     weights_overall['stem'] = weights_keras
 
+    # conv: [kernel, (bias)]
+    # bn: [gamma, beta, mean, var]
     with open("serialized_weights_by_layer.pkl", 'wb') as f:
         pickle.dump(weights_overall, f)
+
+    # save by layer
+    weight_lst = []
+    for loc_params in weights_overall.values():
+        for layer_params in loc_params:
+            weight_lst.append(layer_params)
+    print(len(weight_lst))
+
+    # set weights
+    model = EfficientNetV2(dropout_rate=0., n_classes=1000)
+    idx = 0
+    for l in model.layers:
+        if idx >= len(weight_lst):
+            continue
+        if 'conv' in l.name or 'batch_norm' in l.name:
+            print(l.name)
+            print(len(weight_lst[idx]), len(l.get_weights()))
+            # set conv: [kernel, (bias)]
+            # set bn: [gamma, beta, mean, var]
+            l.set_weights(weight_lst[idx])
+            idx += 1
+    model.save_weights('effv2s.h5')
+
 
 
 

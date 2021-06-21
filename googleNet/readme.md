@@ -157,6 +157,15 @@
         waiting for particular scale up factors...
 
 
+    实际实验下来发现
+    1. imageNet预权重贼重要，收敛/不收敛的区别
+    2. progressive learning又慢又没用，直接训最后一个stage，用strong regularization，用effv1的训练策略就可以得到很好的结果
+
+
+
+
+
+
 
 
 
