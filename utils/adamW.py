@@ -43,16 +43,18 @@ class AdamW(Optimizer):
         return ms, vs, vhats, ema_weights
 
     def get_updates(self, loss, params):
+        # old weights: params
         grads = self.get_gradients(loss, params)
         self.updates = [K.update_add(self.iterations, 1)]
 
         lr = self.lr
         if self.initial_decay > 0:
             lr = lr * (1. / (1. + self.decay * tf.cast(self.iterations, K.dtype(self.decay))))
-        # ERM approx correction
-        t = tf.cast(self.iterations, tf.float32)
+
+        # EMA bias correction
+        t = tf.cast(self.iterations+1, tf.float32)
         lr_t = lr * (K.sqrt(1. - tf.pow(self.beta_2, t)) / (1. - tf.pow(self.beta_1, t)))
-        self.updates.append(K.update(self.lr, lr_t))
+        # self.updates.append(K.update(self.lr, lr_t))
 
         ms, vs, vhats, ema_weights = self._create_all_weights(params)
         for p, g, m, v, vhat, e in zip(params, grads, ms, vs, vhats, ema_weights):
@@ -69,7 +71,7 @@ class AdamW(Optimizer):
 
             # weight decay
             if self.weight_decay:
-                new_p = new_p - p*self.weight_decay
+                new_p = new_p - p*self.weight_decay*lr
 
             # Apply constraints.
             if getattr(p, 'constraint', None) is not None:
@@ -108,20 +110,24 @@ if __name__ == '__main__':
     from keras.layers import Input, GlobalAveragePooling2D, Dense
     from keras.models import Model, load_model
     from keras.callbacks import ModelCheckpoint
+    from keras.optimizers import Adam
+
 
     inpt = Input((None,None,3))
     x = GlobalAveragePooling2D()(inpt)
-    x = Dense(2, activation='softmax')(x)
+    x = Dense(2, activation='softmax', kernel_initializer='zeros', bias_initializer='zeros')(x)
     model = Model(inpt, x)
     optimizer = AdamW()
+    # optimizer = Adam()
     model.compile(optimizer, 'categorical_crossentropy')
 
     # train
-    X = np.random.uniform(0, 1, (32,224,224,3))
-    y = np.random.randint(0, 2, (32,2))
+    # X = np.random.uniform(0, 1, (32,224,224,3))
+    # Y = np.random.randint(0, 2, (32,2))
+    X = np.load("X.npy")
+    Y = np.load("Y.npy")
     ckpt = ModelCheckpoint('test_ep{epoch:02d}.h5', monitor='loss', verbose=1)
-    print(X, y)
-    model.fit(X,y,epochs=10, batch_size=16, verbose=1, callbacks=[ckpt])
+    model.fit(X,Y,epochs=10, batch_size=20, verbose=1, callbacks=[])
 
     # # test
     # model = load_model('test_ep01.h5', custom_objects={'AdamW': AdamW})
