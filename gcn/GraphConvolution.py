@@ -9,7 +9,7 @@ import tensorflow as tf
 
 class GraphConvolution(Layer):
     """Basic graph convolution layer as in https://arxiv.org/abs/1609.02907"""
-    def __init__(self, out_dim, num_node,
+    def __init__(self, out_dim,
                  activation=None,
                  use_bias=True,
                  kernel_initializer='glorot_uniform',
@@ -22,7 +22,6 @@ class GraphConvolution(Layer):
                  **kwargs):
         super(GraphConvolution, self).__init__(**kwargs)
         self.out_dim = out_dim
-        self.num_node = num_node
         self.activation = activations.get(activation)
         self.use_bias = use_bias
         self.kernel_initializer = initializers.get(kernel_initializer)
@@ -101,7 +100,7 @@ if __name__ == '__main__':
 
     x = Input((32,128))
     adj = Input((32,32))
-    y = GraphConvolution(16,12)([x,adj])
+    y = GraphConvolution(16)([x,adj])
     print(y)
     model = Model([x,adj], y)
 
@@ -109,7 +108,7 @@ if __name__ == '__main__':
     adj = np.random.uniform(0, 1, (12,32,32))
 
     y = model.predict([X,adj])
-    print(y)
+    print(y.shape)    # (b,N,F)
 
 
 

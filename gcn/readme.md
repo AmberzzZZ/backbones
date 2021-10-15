@@ -1,4 +1,6 @@
-# origin graph convolution layer
+# layer level
+
+## origin graph convolution layer
 
     layer inputs: 
         batch inputs: (b,N,D)
@@ -15,7 +17,7 @@
         左乘adj mat，右乘weights mat
 
 
-# graph convolution layer with residual path
+## graph convolution layer with residual path
 
     layer inputs: 
         batch inputs: (b,N,D)
@@ -36,4 +38,23 @@
         add
 
 
-# graph attention
+## graph attention
+
+
+
+
+# network level
+
+## orig paper's GCN
+    
+    就两层: 
+    1. GCN-relu-dropout
+    2. GCN-softmax
+
+
+## GCN with trainable connectivity
+
+    adjacent matrix也是个trainable variable
+
+
+
