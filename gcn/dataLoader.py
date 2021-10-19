@@ -1,5 +1,6 @@
 import numpy as np
 import scipy.sparse as sp
+import matplotlib.pyplot as plt
 
 
 def load_data(path="data/cora/", dataset="cora"):
@@ -8,7 +9,8 @@ def load_data(path="data/cora/", dataset="cora"):
 
     idx_features_labels = np.genfromtxt("{}{}.content".format(path, dataset), dtype=np.dtype(str))
     features = sp.csr_matrix(idx_features_labels[:, 1:-1], dtype=np.float32)
-    labels = encode_onehot(idx_features_labels[:, -1])
+    labels, classes = encode_onehot(idx_features_labels[:, -1])
+    np.save("classes.npy", classes)
 
     # build graph
     idx = np.array(idx_features_labels[:, 0], dtype=np.int32)
@@ -47,17 +49,36 @@ def eval_preds(preds, labels, indices):
     split_acc = list()
 
     for y_split, idx_split in zip(labels, indices):
+        # np.save("preds_split2.npy", preds[idx_split])
         split_loss.append(categorical_crossentropy(preds[idx_split], y_split[idx_split]))
         split_acc.append(accuracy(preds[idx_split], y_split[idx_split]))
 
     return split_loss, split_acc
 
 
+def plot_embedding(feature_low, label, title=''):
+    # feature_low: (N,dim)
+    # label: (N,), abs label
+    x_min, x_max = np.min(feature_low, 0), np.max(feature_low, 0)
+    feature_low = (feature_low - x_min) / (x_max - x_min)
+
+    plt.figure()
+    # tranverse test samples
+    for i in range(feature_low.shape[0]):
+        plt.text(feature_low[i, 0], feature_low[i, 1], str(label[i]),         # x,y坐标及label
+                 color=plt.cm.Set1(label[i] / 10.),
+                 fontdict={'weight': 'bold', 'size': 9})
+    plt.xticks([])
+    plt.yticks([])
+    plt.title(title)
+    plt.show()
+
+
 def encode_onehot(labels):
-    classes = set(labels)
+    classes = sorted(list(set(labels)))
     classes_dict = {c: np.identity(len(classes))[i, :] for i, c in enumerate(classes)}
     labels_onehot = np.array(list(map(classes_dict.get, labels)), dtype=np.int32)
-    return labels_onehot
+    return labels_onehot, classes
 
 
 def normalize_adj(adj, symmetric=True):

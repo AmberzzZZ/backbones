@@ -2,6 +2,8 @@
 
 ## origin graph convolution layer
 
+    paper: SEMI-SUPERVISED CLASSIFICATION WITH GRAPH CONVOLUTIONAL NETWORKS
+
     layer inputs: 
         batch inputs: (b,N,D)
         adj matrix: (b,N,N), repeat along b-axis
@@ -18,6 +20,8 @@
 
 
 ## graph convolution layer with residual path
+
+    paper: DAG: Structured Landmark Detection via Topology-Adapting Deep Graph Learning
 
     layer inputs: 
         batch inputs: (b,N,D)
@@ -47,12 +51,23 @@
 
 ## orig paper's GCN
     
+    task: classification
+
     就两层: 
     1. GCN-relu-dropout
     2. GCN-softmax
 
+    vis: TSNE
+
 
 ## GCN with trainable connectivity
+
+    task: coordinate regression based landmark detection
+
+    多个GCN cascade逼近精确预测坐标
+    * inputs：visual features (b,h,w,c) 和 initial graph (n,n)
+    * 一个GCN-global：预测一个透视变换参数，(b,9)
+    * 多个GCN-local：预测一个坐标偏移量，(b,N,2)
 
     adjacent matrix也是个trainable variable
 

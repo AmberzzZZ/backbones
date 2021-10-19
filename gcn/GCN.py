@@ -6,7 +6,7 @@ import keras.backend as K
 import time
 import numpy as np
 from GraphConvolution import GraphConvolution
-from dataLoader import load_data, get_splits, preprocess_adj, eval_preds
+from dataLoader import load_data, get_splits, preprocess_adj, eval_preds, plot_embedding
 
 
 def GCN(n_classes=7):
@@ -39,7 +39,7 @@ if __name__ == '__main__':
 
     # data
     X, A, y = load_data()       # (N,D)mat, (N,N)sp_mat, (N,cls)mat
-    y_train, y_val, y_test, idx_train, idx_val, idx_test, train_mask = get_splits(y)
+    y_train, y_val, y_test, idx_train, idx_val, idx_test, train_mask = get_splits(y)    # arr & range objects
     X, A, y_lst = prepare_data(X, A, y, train_mask)
     y, train_mask = y_lst
     n_classes = y_train.shape[-1]
@@ -58,53 +58,66 @@ if __name__ == '__main__':
     best_acc = 0.
     best_loss = 9999999
     wait = 0
-    for ep in range(1, 201):
+    # for ep in range(1, 201):
 
-        t = time.time()
+    #     t = time.time()
 
-        # single train
-        model.fit([X,A],y,
-                  batch_size=1,
-                  epochs=1,
-                  shuffle=False,
-                  verbose=1)
+    #     # single train
+    #     model.fit([X,A],y,
+    #               batch_size=1,
+    #               epochs=1,
+    #               shuffle=False,
+    #               verbose=1)
 
-        # single validation
-        preds = model.predict([X,A], batch_size=1)[0]     # (N,cls)
+    #     # single validation
+    #     preds = model.predict([X,A], batch_size=1)[0]     # (N,cls)
 
-        train_val_loss, train_val_acc = eval_preds(preds, [y_train, y_val],
-                                                   [idx_train, idx_val])
+    #     train_val_loss, train_val_acc = eval_preds(preds, [y_train, y_val],
+    #                                                [idx_train, idx_val])
 
-        # log
-        print("Epoch: {:04d}".format(ep),
-              "train_loss: {:.3f}".format(train_val_loss[0]),
-              "train_acc: {:.3f}".format(train_val_loss[1]),
-              "test_loss: {:.3f}".format(train_val_acc[0]),
-              "test_acc: {:.3f}".format(train_val_acc[1]),
-              "time: {:.4f}".format(time.time()-t),
-              )
+    #     # log
+    #     print("Epoch: {:04d}".format(ep),
+    #           "train_loss: {:.3f}".format(train_val_loss[0]),
+    #           "train_acc: {:.3f}".format(train_val_loss[1]),
+    #           "val_loss: {:.3f}".format(train_val_acc[0]),
+    #           "val_acc: {:.3f}".format(train_val_acc[1]),
+    #           "time: {:.4f}".format(time.time()-t),
+    #           )
 
-        # save ckpt
-        if train_val_acc[1]>best_acc or train_val_loss[1]<best_loss:
-            best_acc = max(best_acc, train_val_acc[1])
-            best_loss = min(best_loss, train_val_loss[1])
-            model.save_weights("GCN_cls%d_ep%d_valacc_%f.h5" % (n_classes, ep, best_acc))
-            wait = 0
-        else:
-            if wait>10:
-                break
-            wait += 1
+    #     # save ckpt
+    #     if train_val_acc[1]>best_acc or train_val_loss[1]<best_loss:
+    #         best_acc = max(best_acc, train_val_acc[1])
+    #         best_loss = min(best_loss, train_val_loss[1])
+    #         model.save_weights("GCN_cls%d_ep%d_valacc_%f.h5" % (n_classes, ep, best_acc))
+    #         wait = 0
+    #     else:
+    #         if wait>10:
+    #             break
+    #         wait += 1
+    # np.save("preds.npy", preds)     # last iteration, not necessary the best
 
     # test
     print("############### test #################")
+    preds = np.load("preds.npy")
+    classes = np.load('classes.npy')
+    print("classes", classes)
+    # model.load_weights("GCN_cls7_ep163_valacc_0.846667.h5")
+    # preds = model.predict([X,A], batch_size=1)[0]
     test_loss, test_acc = eval_preds(preds, [y_test], [idx_test])
     print("test_loss: {:.3f}".format(test_loss[0]),
           "test_acc: {:.3f}".format(test_acc[0]))
+    # test_loss: 0.636 test_acc: 0.809
+
+    # ############### vis ##################
+    from sklearn.manifold import TSNE
+    tsne = TSNE(n_components=2, init='pca', random_state=0)
+    feature_high, label = preds[idx_test], np.argmax(y_test,axis=-1)
+    feature_low = tsne.fit_transform(feature_high)
+    plot_embedding(feature_low, label, title='')
 
 
 
-    # ############### test #################
-    # test_loss: 0.629 test_acc: 0.808
+
 
 
 

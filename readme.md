@@ -17,7 +17,13 @@
 6. hourglass
     hourglass, hourglass for corner/centerNet
 
-7. utils
+7. GCN
+    GCN, GAT
+
+8. HRNet
+    HRNetv1, HRNetv2
+
+9. utils
     BN: syncBN, softBN
     SGD: SoftSGD
     AdamW: Adam with weight decay
