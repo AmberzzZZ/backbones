@@ -31,7 +31,6 @@ class GraphConvolution(Layer):
         self.activity_regularizer = regularizers.get(activity_regularizer)
         self.kernel_constraint = constraints.get(kernel_constraint)
         self.bias_constraint = constraints.get(bias_constraint)
-        self.supports_masking = True
 
     def compute_output_shape(self, input_shapes):
         features_shape = input_shapes[0]     # (b,N,D)
@@ -56,11 +55,11 @@ class GraphConvolution(Layer):
             self.bias = None
         self.built = True
 
-    def call(self, inputs, mask=None):
+    def call(self, inputs):
         features = inputs[0]   # (b,N,D)
         adj = inputs[1]        # (b,N,N)
         # left matmul: batch dot
-        x = K.batch_dot(adj, features, axes=[0,1])   # (b,N,D)
+        x = tf.matmul(adj, features)   # (b,N,D)
         # right matmul: batch dot
         x = K.dot(x, self.kernel)    # (b,N,F)
         # bias & act
@@ -69,8 +68,7 @@ class GraphConvolution(Layer):
         return self.activation(x)
 
     def get_config(self):
-        config = {'units': self.units,
-                  'support': self.support,
+        config = {'out_dim': self.out_dim,
                   'activation': activations.serialize(self.activation),
                   'use_bias': self.use_bias,
                   'kernel_initializer': initializers.serialize(
@@ -116,7 +114,6 @@ class ResGraphConvolution(Layer):
         self.activity_regularizer = regularizers.get(activity_regularizer)
         self.kernel_constraint = constraints.get(kernel_constraint)
         self.bias_constraint = constraints.get(bias_constraint)
-        self.supports_masking = True
 
     def compute_output_shape(self, input_shapes):
         features_shape = input_shapes[0]     # (b,N,D)
@@ -128,7 +125,7 @@ class ResGraphConvolution(Layer):
 
         self.kernel_id = self.add_weight(shape=(in_dim, self.out_dim),        # (D,F)
                                       initializer=self.kernel_initializer,
-                                      name='kernel',
+                                      name='kernel_id',
                                       regularizer=self.kernel_regularizer,
                                       constraint=self.kernel_constraint)
         self.kernel = self.add_weight(shape=(in_dim, self.out_dim),        # (D,F)
@@ -139,7 +136,7 @@ class ResGraphConvolution(Layer):
         if self.use_bias:
             self.bias_id = self.add_weight(shape=(self.out_dim,),              # (F,)
                                         initializer=self.bias_initializer,
-                                        name='bias',
+                                        name='bias_id',
                                         regularizer=self.bias_regularizer,
                                         constraint=self.bias_constraint)
             self.bias = self.add_weight(shape=(self.out_dim,),              # (F,)
@@ -151,7 +148,7 @@ class ResGraphConvolution(Layer):
             self.bias = None
         self.built = True
 
-    def call(self, inputs, mask=None):
+    def call(self, inputs):
         features = inputs[0]   # (b,N,D)
         adj = inputs[1]        # (b,N,N)
 
@@ -161,7 +158,7 @@ class ResGraphConvolution(Layer):
             id += self.bias_id
         # residual path
         # left matmul: batch dot
-        x = K.batch_dot(adj, features, axes=[0,1])   # (b,N,D)
+        x = tf.matmul(adj, features)   # (b,N,D)
         # right matmul: batch dot
         x = K.dot(x, self.kernel)    # (b,N,F)
         # bias & act
@@ -170,8 +167,7 @@ class ResGraphConvolution(Layer):
         return self.activation(id+x)
 
     def get_config(self):
-        config = {'units': self.units,
-                  'support': self.support,
+        config = {'out_dim': self.out_dim,
                   'activation': activations.serialize(self.activation),
                   'use_bias': self.use_bias,
                   'kernel_initializer': initializers.serialize(
@@ -201,9 +197,9 @@ if __name__ == '__main__':
 
     x = Input((32,128))
     adj = Input((32,32))
-    y = GraphConvolution(16)([x,adj])
-    print(y)
-    y = ResGraphConvolution(16)([y,adj])
+    # y = GraphConvolution(16)([x,adj])
+    # print(y)
+    y = ResGraphConvolution(16)([x,adj])
     print(y)
     model = Model([x,adj], y)
 

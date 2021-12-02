@@ -44,6 +44,18 @@
 
 ## graph attention
 
+    paper: GRAPH ATTENTION NETWORKS
+
+    原始的GCN layer的图节点更新：
+    * 左乘A，控制邻接节点名单，右乘W，计算邻接节点的加权和
+    * A是一个fixed/trainable的矩阵变量
+    * W是一个trainable的矩阵权重
+
+    GAT的图节点更新：
+    * 先用trainable weights W，将所有node feature投影到指定维度
+    * 计算邻接节点的attention coefficients，softmax得到权重，再计算邻接节点的加权和
+    * attention coefficients的计算是learnable的，通过一个FC+LeakyReLU的结构，hidden units=1
+    * multi-head：搞K次上面的操作，concat起来作为结果，是single-head输出维度的K倍
 
 
 
