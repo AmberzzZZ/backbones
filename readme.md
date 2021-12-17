@@ -18,12 +18,15 @@
     hourglass, hourglass for corner/centerNet
 
 7. GCN
-    GCN, GAT
+    GCN, GAT, DAG
 
 8. HRNet
     HRNetv1, HRNetv2
 
-9. utils
+9. Swin Transformer
+    Swin-T/S/B/L
+
+10. utils
     BN: syncBN, softBN
     SGD: SoftSGD
     AdamW: Adam with weight decay

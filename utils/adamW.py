@@ -34,7 +34,7 @@ class AdamW(Optimizer):
     def _create_all_weights(self, params):
         ms = [K.zeros(K.int_shape(p), name=p.name.split('/')[0]+'/ms') for p in params]
         vs = [K.zeros(K.int_shape(p), name=p.name.split('/')[0]+'/vs') for p in params]
-        ema_weights = [tf.Variable(p, name=p.name.split('/')[0]+'/ema') for p in params]
+        ema_weights = [tf.Variable(p, name=p.name.split(':')[0]) for p in params]   # keep same name as original layer
         if self.amsgrad:
             vhats = [K.zeros(K.int_shape(p), name=p.name.split('/')[0]+'/vhats') for p in params]
         else:
@@ -60,6 +60,7 @@ class AdamW(Optimizer):
         for p, g, m, v, vhat, e in zip(params, grads, ms, vs, vhats, ema_weights):
             m_t = (self.beta_1 * m) + (1. - self.beta_1) * g
             v_t = (self.beta_2 * v) + (1. - self.beta_2) * tf.square(g)
+            # gradient update
             if self.amsgrad:
                 vhat_t = tf.maximum(vhat, v_t)
                 new_p = p - lr_t * m_t / (K.sqrt(vhat_t) + self.epsilon)
@@ -69,9 +70,9 @@ class AdamW(Optimizer):
             self.updates.append(K.update(m, m_t))
             self.updates.append(K.update(v, v_t))
 
-            # weight decay
-            if self.weight_decay:
-                new_p = new_p - p*self.weight_decay*lr
+            # weight decay excludes bn
+            if self.weight_decay and 'batch_normalization' not in p.name:
+                new_p = new_p - p*self.weight_decay*lr_t
 
             # Apply constraints.
             if getattr(p, 'constraint', None) is not None:
@@ -81,6 +82,8 @@ class AdamW(Optimizer):
             # EMA
             if self.ema_momentum:
                 ema = self.ema_momentum * e - (1.-self.ema_momentum)*new_p
+                # bias correction
+                ema = ema / (1-K.pow(self.ema_momentum, t))
                 self.updates.append(K.update(e, ema))
 
         return self.updates
@@ -100,7 +103,9 @@ class AdamW(Optimizer):
         return dict(list(base_config.items()) + list(config.items()))
 
     def get_ema_weights(self):
-        ema_weights = [i for i in self.weights if 'ema' in i.name]
+        # ema_weights = [i for i in self.weights if 'ema' in i.name]
+        length = (len(self.weights)-1) // 4    # [self.iterations] + ms + vs + vhats + ema_weights
+        ema_weights = self.weights[-length:]
         return ema_weights
 
 
