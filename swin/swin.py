@@ -1,5 +1,5 @@
 from keras.layers import Input, Conv2D, add, Dropout, Dense, Lambda, GlobalAveragePooling2D, Layer
-from WMSA import WindowMultiHeadAttention, FeedForwardNetwork, gelu
+from WMSA import WindowMultiHeadAttention, FeedForwardNetwork, gelu, bias_init
 from LayerNormalization import LayerNormalization
 from keras.models import Model
 import keras.backend as K
@@ -35,12 +35,13 @@ def SwinTransformer(input_shape=(224,224,3), patch_size=4, emb_dim=96, ape=False
     for i in range(n_stages):
         merging = True if i<n_stages-1 else False
         # pad on the top
-        pad_l = pad_t = 0
         pad_b, pad_r = (window_size - H % window_size) % window_size, (window_size - W % window_size) % window_size
-        # x = Lambda(lambda x: tf.pad(x, [[0,0],[pad_t, pad_b], [pad_l, pad_r], [0,0]]))(x)
-        x = Pad_HW(pad_t, pad_b, pad_l, pad_r)(x)
-        H += pad_b
-        W += pad_r
+        if pad_b or pad_r:
+            pad_l = pad_t = 0
+            # x = Lambda(lambda x: tf.pad(x, [[0,0],[pad_t, pad_b], [pad_l, pad_r], [0,0]]))(x)
+            x = Pad_HW(pad_t, pad_b, pad_l, pad_r)(x)
+            H += pad_b
+            W += pad_r
         # WSA+SWSA: 2 blocks
         x = basicStage(x, emb_dim, (H,W), num_layers[i]//2, num_heads[i], window_size, mlp_ratio, qkv_bias,
                          attn_drop=0., ffn_drop=0., residual_drop=dbr[sum(num_layers[:i]):sum(num_layers[:i+1])],
@@ -56,7 +57,7 @@ def SwinTransformer(input_shape=(224,224,3), patch_size=4, emb_dim=96, ape=False
     x = GlobalAveragePooling2D(data_format='channels_last')(x)    # (b,8C)
 
     if n_classes:
-        x = Dense(n_classes, activation='softmax')(x)
+        x = Dense(n_classes, activation='softmax', kernel_initializer=bias_init, bias_initializer='zeros')(x)
 
     model = Model(inpt, x)
 
@@ -89,7 +90,7 @@ def basicStage(x, emb_dim, feature_shape, depth, n_heads, window_size, mlp_ratio
                                  attn_drop, ffn_drop, residual_drop[i], idx=idx+i)(x)
     # downsampling
     if patch_merging:
-        x = Lambda(PatchMerging, arguments={'feature_shape': feature_shape, 'emb_dim': emb_dim}, name='PatchMerging%d' % stage)(x)
+        x = PatchMerging(feature_shape, emb_dim, stage_idx=idx+i)(x)
 
     return x
 
@@ -202,22 +203,45 @@ def CyclicShift(x, feature_shape, n_channels, shift_size):
     return x
 
 
-def PatchMerging(x, feature_shape, emb_dim):
+class PatchMerging(Model):
+
     # input: [b, H,W, D]
     # output: [b,H//2,W//2,D*2]
 
-    h, w = feature_shape
-    pad_h, pad_w = int(h%2==1), int(w%2==1)
-    x = tf.pad(x, [[0,0],[0,pad_h],[0,pad_w],[0,0]], name=None)
+    def __init__(self, feature_shape, emb_dim, stage_idx=None, **kwargs):
+        super(PatchMerging, self).__init__(name='PatchMerging_%d' % stage_idx, **kwargs)
+        h, w = feature_shape
+        pad_h, pad_w = int(h%2==1), int(w%2==1)
 
-    x0 = x[:,0::2,0::2,:]
-    x1 = x[:,1::2,0::2,:]
-    x2 = x[:,0::2,1::2,:]
-    x3 = x[:,1::2,1::2,:]
-    x = K.concatenate([x0,x1,x2,x3], axis=-1)  # [b,h/2,w/2,4c]
-    x = Dense(2*emb_dim, use_bias=False)(x)
+        self.use_pad = False
+        if pad_h or pad_w:
+            self.use_pad = True
+            self.pad = Pad_HW(0, pad_h, 0, pad_w)
+        self.ln = LayerNormalization()
+        self.dense = Dense(2*emb_dim, use_bias=False, kernel_initializer=bias_init)
 
-    return x
+        self.feature_shape = feature_shape
+        self.emb_dim = emb_dim
+
+    def call(self, x):
+
+        if self.use_pad:
+            x = self.pad(x)
+        x0 = x[:,0::2,0::2,:]
+        x1 = x[:,1::2,0::2,:]
+        x2 = x[:,0::2,1::2,:]
+        x3 = x[:,1::2,1::2,:]
+        x = K.concatenate([x0,x1,x2,x3], axis=-1)  # [b,h/2,w/2,4c]
+        x = self.ln(x)
+        x = self.dense(x)
+
+        return x
+
+    def compute_output_shape(self, input_shape):
+        H,W = self.feature_shape
+        H = (H+1) // 2
+        W = (W+1) // 2
+        return (None, H, W, self.emb_dim*2)
 
 
 def getWindowMask(feature_shape, window_size, shift_size):
@@ -244,6 +268,7 @@ if __name__ == '__main__':
     x = Input((224,224,3))
     y = model(x)
     print(y)
+
 
 
 

@@ -4,11 +4,15 @@ import torch
 from swin import SwinTransformer
 
 
-torch_weights = "weights/swin_base_patch4_window12_384_22kto1k.pth"
+torch_weights = "weights/swin_tiny_patch4_window7_224.pth"
+# torch_weights = "weights/swin_base_patch4_window7_224_22k.pth"
+# torch_weights = "weights/swin_base_patch4_window12_384_22kto1k.pth"
 n_stages = 4
-num_layers=[2,2,18,2]   # T-[2,2,6,2] , B-[2,2,18,2]
-window_size = 7   # 12
-n_classes = 1000    # 21k
+emb_dim = 96             # T-96, B-128
+num_layers = [2,2,6,2]   # T-[2,2,6,2] , B-[2,2,18,2]
+num_heads = [3,6,12,24]  # T-[3,6,12,24], B-[4,8,16,32]
+window_size = 7          # 12
+n_classes = 1000         # 21k-21841, 1k-1000
 
 state_dict = torch.load(torch_weights, map_location='cpu')
 model_weights = state_dict['model']
@@ -25,6 +29,10 @@ for i in range(n_stages):
         print('------------- block %d --------------' % b)
         block_weights = {k:v for k,v in model_weights.items() if 'layers.%d.blocks.%d' % (i,b) in k}
         print({k:v.shape for k,v in block_weights.items()})
+    print('------------- patchmerging --------------')
+    block_weights = {k:v for k,v in model_weights.items() if 'layers.%d.downsample' % (i) in k}
+    print({k:v.shape for k,v in block_weights.items()})
+
 
 print('------------ last norm --------------')
 Norm_weights = {k:v for k,v in model_weights.items() if 'norm.' in k and 'layers' not in k and 'patch' not in k}
@@ -54,8 +62,8 @@ print(stage_ref)
 # keras_model_swin = SwinTransformer(patch_size=4, emb_dim=96, n_classes=1000, num_layers=[2,2,6,2],
 #                                     num_heads=[3,6,12,24], window_size=7, qkv_bias=True, qk_scale=None,
 #                                     mlp_ratio=4, attn_drop=0., ffn_drop=0., residual_drop=0.2)
-keras_model_swin = SwinTransformer(patch_size=4, emb_dim=128, n_classes=1000, num_layers=[2,2,18,2],
-                                    num_heads=[4,8,16,32], window_size=12, residual_drop=0.5)
+keras_model_swin = SwinTransformer(patch_size=4, emb_dim=emb_dim, n_classes=n_classes, num_layers=num_layers,
+                                    num_heads=num_heads, window_size=window_size, residual_drop=0.5)
 for layer in keras_model_swin.layers:
     if not layer.get_weights():
         continue
@@ -89,6 +97,7 @@ for layer in keras_model_swin.layers:
         block1_weights = block1_weights[:-1]
         block_weights += block1_weights
         layer.set_weights(block_weights)
+
         # for sub_l in layer.layers:
         #     print(sub_l.name)
             # LN: gamma,bias
@@ -99,6 +108,17 @@ for layer in keras_model_swin.layers:
             # SWMH
             # LN
             # FFN
+
+    elif 'PatchMerging' in layer.name:
+        # LN: gamma, bias
+        # Dense: weight
+        stage_id = int(layer.name.split('_')[-1])
+        block_weights = {k:v for k,v in model_weights.items() if 'layers.%d.downsample' % (stage_id) in k}
+        block_weights = [np.transpose(v,(1,0)) if 'reduction' in k else v for k,v in block_weights.items()] 
+        # print([w.shape for w in block1_weights])
+        # print([l.shape for l in layer.get_weights()])
+        layer.set_weights(block_weights)
+
     elif 'layer_norm' in layer.name:
         # last layernorm
         norm_weights = Norm_weights['norm.weight']
@@ -111,7 +131,7 @@ for layer in keras_model_swin.layers:
         dense_bias = Head_weights['head.bias']
         layer.set_weights([dense_weights, dense_bias])
 
-keras_model_swin.save_weights('weights/swin_base_patch4_window12_384_22k.h5')
+keras_model_swin.save_weights('weights/swin_tiny_patch4_window7_224.h5')
 
 
 
