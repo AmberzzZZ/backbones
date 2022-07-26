@@ -41,6 +41,59 @@
         因此对conv4_3进行l2 norm
         可学习参数
 
+## repvgg
+
+    official repo: https://github.com/DingXiaoH/RepVGG
+
+    [model zoo]:
+    RepVGG-A0, RepVGG-A1, RepVGG-A2,
+    RepVGG-B0,
+    RepVGG-B1, RepVGG-B1g2, RepVGG-B1g4,
+    RepVGG-B2, RepVGG-B2g2, RepVGG-B2g4,
+    RepVGG-B3, RepVGG-B3g2, RepVGG-B3g4,
+    RepVGG-D2se,
+    RepVGGplus-L2pse,      // leaderboard上面超越了swin
+
+    [RepVGG & RepVGGplus]:
+    * deeper
+    * has three auxiliary classifiers: 多了3个辅助分类器，只存在于训练阶段
+
+
+    [一些精度对标]：
+    RepVGG-A0        ---      ResNet18
+    RepVGG-A2/B1g4   ---      EfficientNet-b0
+    RepVGG-B1g2      ---      ResNet50
+    RepVGG-B2g4      ---      ResNeXt50
+    RepVGG-B2        ---      ResNeXt101/EfficientNet-b3
+
+
+    [training-time model & deploy(inference-time) model]:
+    * run convert.py 进行转换
+    * structural re-parameterization technique: 重新参数化，模型压缩中的一类常见手段
+
+    主要关注test-time的线形合并
+    1. multi-branch必须只包含线形单元：relu在外面
+    2. test-time reparam
+
+    **** basic architecture  *****
+
+    **** model zoo  *****
+    repvggplus
+
+
+    **** convert  *****
+    源代码: repvgg.py - repvgg_model_convert
+           repvggplus.py - switch_repvggplus_to_deploy
+
+
+
+
+
+
+
+
+
+
 
 
 

@@ -2,7 +2,7 @@
     vgg16, vgg19, vgg for SSD
 
 2. ResNet
-    resnet18, resnet34, resnet50, resnet101, resnext, resnest, 
+    resnet18, resnet34, resnet50, resnet101, resnext, resnest,
     stochastic depth, CSP-resnet, 2.5D, SENet, SKNet
 
 3. MobileNet
@@ -12,7 +12,7 @@
     InceptionV1-4, Xception, EfficientNet, Xception for deeplab, EfficientNetV2
 
 5. darknet
-    darknet53, 
+    darknet53,
 
 6. hourglass
     hourglass, hourglass for corner/centerNet
@@ -26,7 +26,10 @@
 9. Swin Transformer
     Swin-T/S/B/L
 
-10. utils
+10. EfficientNet
+    EfficientNet, EfficientNet-Lite, EfficientNetV2
+
+11. utils
     BN: syncBN, softBN
     SGD: SoftSGD
     AdamW: Adam with weight decay
