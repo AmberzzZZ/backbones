@@ -76,14 +76,22 @@
     2. test-time reparam
 
     **** basic architecture  *****
+    basic block由2/3个branch组成：bn / conv3-bn / conv1-bn，有s2的block无bn-branch
+    然后在分支外面add & (se) & relu
+    三个线形分支在测试阶段可以线形合并：全部转换成3x3的conv-bias单元然后合并
 
     **** model zoo  *****
     repvggplus
 
-
-    **** convert  *****
+    **** convert *****
     源代码: repvgg.py - repvgg_model_convert
            repvggplus.py - switch_repvggplus_to_deploy
+
+
+    复现issue：
+    * 手动padding：这个之前也处理很多次了，torch和tf的padding模式不一样，torch padding是填两边，tf的same padding是填一边，所以需要显示地手动zeropadding
+    * train/test model：id path上group conv的kernel需要注意，为了使得gconv以后输出等于输入，kernel首先肯定是3x3只有中心是1，其次每个 channel group里面，只有一个通道是激活的
+
 
 
 
